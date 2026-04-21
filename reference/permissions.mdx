@@ -1,0 +1,350 @@
+---
+title: "TShock permission nodes reference"
+description: "Complete reference for TShock's permission nodes, organized by category: tshock.admin, tshock.world, tshock.npc, tshock.tp, tshock.ignore, and more."
+---
+
+TShock uses a hierarchical permission node system to control what actions each player group may perform. Nodes follow the `tshock.<category>.<action>` naming convention and are assigned to groups via the `/group` command or directly in the TShock database. This page documents every built-in permission node, the behavior it controls, and the commands it unlocks.
+
+<Note>
+  Permission nodes are assigned to **groups**, not individual players. Use `/group addperm <groupname> <permission>` to grant a permission and `/group delperm <groupname> <permission>` to revoke one.
+</Note>
+
+---
+
+## Account Permissions (`tshock.account.*`)
+
+<AccordionGroup>
+  <Accordion title="tshock.account.* — Authentication and registration">
+
+| Permission Node | Description | Commands |
+|-----------------|-------------|----------|
+| `tshock.account.register` | User can register an account in-game. | `/register` |
+| `tshock.account.login` | User can log in to an account in-game. | `/login` |
+| `tshock.account.logout` | User can log out of their current account. | `/logout` |
+| `tshock.account.changepassword` | User can change their account password in-game. | `/password` |
+
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Account Info Permissions (`tshock.accountinfo.*`)
+
+<AccordionGroup>
+  <Accordion title="tshock.accountinfo.* — Account visibility">
+
+| Permission Node | Description | Commands |
+|-----------------|-------------|----------|
+| `tshock.accountinfo.check` | Player can check whether a username is registered and see its last login time. | `/accountinfo` (`/ai`) |
+| `tshock.accountinfo.details` | Player can see advanced information about any user account. | None |
+
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Admin Permissions (`tshock.admin.*`)
+
+<AccordionGroup>
+  <Accordion title="tshock.admin.* — Server moderation and management">
+
+| Permission Node | Description | Commands |
+|-----------------|-------------|----------|
+| `tshock.admin.antibuild` | User can toggle global build protection. | `/antibuild` |
+| `tshock.admin.ban` | User can ban players from the server. | `/ban` |
+| `tshock.admin.broadcast` | User can broadcast messages to all players. | `/broadcast` (`/bc`, `/say`) |
+| `tshock.admin.group` | User can manage player groups. | `/group` |
+| `tshock.admin.itemban` | User can manage the item ban list. | `/itemban` |
+| `tshock.admin.kick` | User can kick players from the server. | `/kick` |
+| `tshock.admin.mute` | User can mute and unmute players. | `/mute`, `/unmute` |
+| `tshock.admin.noban` | *(Obsolete)* Prevents you from being banned. | None |
+| `tshock.admin.nokick` | Prevents you from being kicked. | None |
+| `tshock.admin.projectileban` | User can manage the projectile ban list. | `/projban` |
+| `tshock.admin.region` | User can manage protected regions. | `/region` |
+| `tshock.admin.savessi` | User can save all players' SSC state, or override SSC for a player. | `/savessc`, `/overridessc` (`/ossc`) |
+| `tshock.admin.seeplayerids` | User can see player IDs in `/who` output. | None |
+| `tshock.admin.tempgroup` | User can temporarily change another player's group. | `/tempgroup` |
+| `tshock.admin.tileban` | User can manage the tile ban list. | `/tileban` |
+| `tshock.admin.userinfo` | User can view info about other user accounts. | `/userinfo` (`/ui`) |
+| `tshock.admin.viewlogs` | Server log messages are forwarded to this player. | `/displaylogs` |
+| `tshock.admin.warp` | User can manage warp points. | None (warp management subcommands) |
+
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Buff Permissions (`tshock.buff.*`)
+
+<AccordionGroup>
+  <Accordion title="tshock.buff.* — Applying buffs and debuffs">
+
+| Permission Node | Description | Commands |
+|-----------------|-------------|----------|
+| `tshock.buff.self` | User can apply buffs or debuffs to themselves. | `/buff` |
+| `tshock.buff.others` | User can apply buffs or debuffs to other players. | `/gbuff` (`/buffplayer`) |
+
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Config Permissions (`tshock.cfg.*`)
+
+<AccordionGroup>
+  <Accordion title="tshock.cfg.* — Server configuration and maintenance">
+
+| Permission Node | Description | Commands |
+|-----------------|-------------|----------|
+| `tshock.cfg.createdumps` | User can generate Terraria ID reference files and the permission matrix. | `/dump-reference-data` |
+| `tshock.cfg.maintenance` | User is notified of updates and can stop or restart the server. | `/checkupdates`, `/off` (`/exit`, `/stop`), `/off-nosave`, `/version` |
+| `tshock.cfg.password` | User can change the server join password. | `/serverpassword` |
+| `tshock.cfg.reload` | User can reload the server configuration file. | `/reload` |
+| `tshock.cfg.whitelist` | User can modify the server whitelist. | `/whitelist` |
+
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Ignore / Bypass Permissions (`tshock.ignore.*`)
+
+These permissions exempt a player from specific anti-cheat and abuse-detection systems.
+
+<AccordionGroup>
+  <Accordion title="tshock.ignore.* — Anti-cheat bypass nodes">
+
+| Permission Node | Description | Commands |
+|-----------------|-------------|----------|
+| `tshock.ignore.damage` | Prevents your actions from being ignored if damage exceeds the threshold. | None |
+| `tshock.ignore.dropbanneditem` | Allows dropping banned items without them being removed. | None |
+| `tshock.ignore.hp` | Prevents you from being disabled by abnormal HP values. | None |
+| `tshock.ignore.itemstack` | Prevents you from being disabled by stack hack detection. | None |
+| `tshock.ignore.liquid` | Prevents you from being disabled by liquid placement abuse detection. | None |
+| `tshock.ignore.mp` | Prevents you from being disabled by abnormal MP values. | None |
+| `tshock.ignore.npcbuff` | Prevents you from being kicked by NPC buff hack detection. | None |
+| `tshock.ignore.paint` | Prevents you from being disabled by paint abuse detection. | None |
+| `tshock.ignore.placetile` | Prevents your tile placements from being reverted by abuse detection. | None |
+| `tshock.ignore.projectile` | Prevents you from being disabled by projectile abuse detection. | None |
+| `tshock.ignore.removetile` | Prevents your tile removals from being reverted by abuse detection. | None |
+| `tshock.ignore.sendtilesquare` | Allows unrestricted `SendTileSquare` usage for client-side world editing. | None |
+| `tshock.ignore.ssc` | Bypasses server-side character (SSC) enforcement checks. | None |
+
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Item Permissions (`tshock.item.*`)
+
+<AccordionGroup>
+  <Accordion title="tshock.item.* — Item spawning and usage">
+
+| Permission Node | Description | Commands |
+|-----------------|-------------|----------|
+| `tshock.item.give` | User can give items to other players. | `/give` (`/g`) |
+| `tshock.item.spawn` | User can spawn items for themselves. | `/item` (`/i`) |
+| `tshock.item.usebanned` | User can use banned items without restriction. | None |
+
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## NPC Permissions (`tshock.npc.*`)
+
+<AccordionGroup>
+  <Accordion title="tshock.npc.* — NPC spawning and control">
+
+| Permission Node | Description | Commands |
+|-----------------|-------------|----------|
+| `tshock.npc.butcher` | User can kill all hostile NPCs, or NPCs of a specific type. | `/butcher` |
+| `tshock.npc.clearanglerquests` | User can reset the daily angler quest completion list. | `/clearangler` |
+| `tshock.npc.hurttown` | User can deal damage to friendly town NPCs. | None |
+| `tshock.npc.invade` | User can start invasion events. (High network use; easy to abuse.) | None |
+| `tshock.npc.maxspawns` | User can set the maximum NPC spawn count. | `/maxspawns` |
+| `tshock.npc.rename` | User can rename town NPCs. | `/renamenpc` |
+| `tshock.npc.spawnboss` | User can spawn bosses. | `/spawnboss` (`/sb`) |
+| `tshock.npc.spawnmob` | User can spawn regular mobs. | `/spawnmob` (`/sm`) |
+| `tshock.npc.spawnpets` | User can spawn pets. (High network use; easy to abuse.) | None |
+| `tshock.npc.spawnrate` | User can modify the NPC spawn rate. | `/spawnrate` |
+| `tshock.npc.startdd2` | User can start the Old One's Army (DD2) event. | None |
+| `tshock.npc.startinvasion` | User can start invasions (Goblin Army, Snow Legion) using items. | None |
+| `tshock.npc.summonboss` | User can summon bosses using in-game items. | None |
+
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Teleportation Permissions (`tshock.tp.*`)
+
+<AccordionGroup>
+  <Accordion title="tshock.tp.* — Teleportation abilities">
+
+| Permission Node | Description | Commands |
+|-----------------|-------------|----------|
+| `tshock.tp.allothers` | User can teleport all online players to themselves. | None |
+| `tshock.tp.block` | User can prevent other players from teleporting them. | `/tpallow` |
+| `tshock.tp.demonconch` | User can use the Demon Conch item to teleport. | None |
+| `tshock.tp.getpos` | User can get the tile position of players. | `/pos` |
+| `tshock.tp.home` | User can teleport to their personal spawn point. | `/home` |
+| `tshock.tp.magicconch` | User can use the Magic Conch item to teleport. | None |
+| `tshock.tp.npc` | User can teleport to an NPC. | `/tpnpc` |
+| `tshock.tp.others` | User can teleport other players to themselves. | `/tphere` |
+| `tshock.tp.override` | User can override teleport blocks set by other players. | None |
+| `tshock.tp.pos` | User can teleport to specific tile coordinates. | `/tppos` |
+| `tshock.tp.pylon` | User can use pylons to teleport. | None |
+| `tshock.tp.rod` | User can use the Rod of Discord to teleport. | None |
+| `tshock.tp.self` | User can teleport to other players. | `/tp` |
+| `tshock.tp.silent` | User can teleport to players without triggering a notification. | None |
+| `tshock.tp.spawn` | User can teleport to the world spawn point. | `/spawn` |
+| `tshock.tp.tppotion` | User can use Teleportation Potions. | None |
+| `tshock.tp.wormhole` | User can use Wormhole Potions to teleport. | None |
+
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## World Permissions (`tshock.world.*`)
+
+<AccordionGroup>
+  <Accordion title="tshock.world.* — World state and modification">
+
+| Permission Node | Description | Commands |
+|-----------------|-------------|----------|
+| `tshock.world.editregion` | User can edit region definitions. | None |
+| `tshock.world.editspawn` | User can edit the spawn area and spawn protection. | `/protectspawn` |
+| `tshock.world.grow` | User can grow plants at their location. | `/grow` |
+| `tshock.world.growevil` | User can grow evil biome plants. | None |
+| `tshock.world.hardmode` | User can toggle hardmode on or off. | `/hardmode` |
+| `tshock.world.info` | User can retrieve world information. | `/worldinfo` |
+| `tshock.world.modify` | User can place and remove tiles. | None |
+| `tshock.world.movenpc` | User can change the home location of town NPCs. | None |
+| `tshock.world.paint` | User can paint tiles. | None |
+| `tshock.world.rain` | User can toggle rain on or off. | None |
+| `tshock.world.sandstorm` | User can toggle sandstorms on or off. | None |
+| `tshock.world.save` | User can save the world. | `/save` |
+| `tshock.world.setdungeon` | User can set the dungeon entrance location. | `/setdungeon` |
+| `tshock.world.sethalloween` | User can force permanent Halloween mode. | `/forcehalloween` |
+| `tshock.world.setspawn` | User can set the world spawn point. | `/setspawn` |
+| `tshock.world.setxmas` | User can force permanent Christmas mode. | `/forcexmas` |
+| `tshock.world.settleliquids` | User can force liquid physics to settle. | `/settle` |
+| `tshock.world.switchevil` | User can switch the world's evil type. | `/evil` |
+| `tshock.world.toggleexpert` | User can change the world difficulty/mode. | `/worldmode` (`/gamemode`) |
+| `tshock.world.toggleparty` | User can toggle the party event. | None |
+| `tshock.world.wind` | User can modify the wind speed. | `/wind` |
+| `tshock.world.worldupgrades` | User can use world-based permanent boosters (e.g., Advanced Combat Techniques). | None |
+
+  </Accordion>
+
+  <Accordion title="tshock.world.time.* — Time manipulation">
+
+| Permission Node | Description | Commands |
+|-----------------|-------------|----------|
+| `tshock.world.time.bloodmoon` | User can force a blood moon event. | None |
+| `tshock.world.time.dropmeteor` | User can drop a meteor on the world. | None |
+| `tshock.world.time.eclipse` | User can force a solar eclipse event. | None |
+| `tshock.world.time.fullmoon` | User can force a full moon event. | None |
+| `tshock.world.time.set` | User can set the world time. | `/time` |
+| `tshock.world.time.usemoondial` | User can use the Enchanted Moondial item. | None |
+| `tshock.world.time.usesundial` | User can use the Enchanted Sundial item. | None |
+
+  </Accordion>
+
+  <Accordion title="tshock.world.events.* — World event subcommands">
+
+| Permission Node | Description | Commands |
+|-----------------|-------------|----------|
+| `tshock.world.events` | User can use the `/worldevent` command. | `/worldevent` |
+| `tshock.world.events.bloodmoon` | User can use the `bloodmoon` subcommand of `/worldevent`. | None |
+| `tshock.world.events.eclipse` | User can use the `eclipse` subcommand of `/worldevent`. | None |
+| `tshock.world.events.fullmoon` | User can use the `fullmoon` subcommand of `/worldevent`. | None |
+| `tshock.world.events.invasion` | User can use the `invasion` subcommand of `/worldevent`. | None |
+| `tshock.world.events.lanternsnight` | User can use the `lanternsnight` subcommand of `/worldevent`. | None |
+| `tshock.world.events.meteor` | User can use the `meteor` subcommand of `/worldevent`. | None |
+| `tshock.world.events.meteorshower` | User can use the `meteorshower` subcommand of `/worldevent`. | None |
+| `tshock.world.events.rain` | User can use the `rain` subcommand of `/worldevent`. | None |
+| `tshock.world.events.sandstorm` | User can use the `sandstorm` subcommand of `/worldevent`. | None |
+
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Journey Mode Permissions (`tshock.journey.*`)
+
+These permissions control access to Journey Mode's Creative UI powers on a per-player basis.
+
+<AccordionGroup>
+  <Accordion title="tshock.journey.* — Creative UI controls">
+
+| Permission Node | Description | Commands |
+|-----------------|-------------|----------|
+| `tshock.journey.biomespreadfreeze` | User can freeze biome spreading via Creative UI. | None |
+| `tshock.journey.godmode` | User can toggle godmode via Creative UI. | None |
+| `tshock.journey.placementrange` | User can toggle increased tile placement range via Creative UI. | None |
+| `tshock.journey.rain.freeze` | User can freeze rain strength via Creative UI. | None |
+| `tshock.journey.rain.strength` | User can set rain strength and seed via Creative UI. | None |
+| `tshock.journey.research` | User can contribute item research by sacrificing items. | None |
+| `tshock.journey.setdifficulty` | User can set world difficulty/mode via Creative UI. | None |
+| `tshock.journey.setspawnrate` | User can set NPC spawn rate via Creative UI. | None |
+| `tshock.journey.time.freeze` | User can freeze world time via Creative UI. | None |
+| `tshock.journey.time.set` | User can set world time via Creative UI. | None |
+| `tshock.journey.time.setspeed` | User can set world time speed via Creative UI. | None |
+| `tshock.journey.wind.freeze` | User can freeze wind strength via Creative UI. | None |
+| `tshock.journey.wind.strength` | User can set wind strength and seed via Creative UI. | None |
+
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## SSC Permissions (`tshock.ssc.*`)
+
+<AccordionGroup>
+  <Accordion title="tshock.ssc.* — Server-side characters">
+
+| Permission Node | Description | Commands |
+|-----------------|-------------|----------|
+| `tshock.ssc.upload` | User can upload their character data at join time as their SSC data. | `/uploadssc` |
+| `tshock.ssc.upload.others` | User can upload other players' join data to the SSC database. | None |
+
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Miscellaneous Permissions
+
+<AccordionGroup>
+  <Accordion title="Other standalone permission nodes">
+
+| Permission Node | Description | Commands |
+|-----------------|-------------|----------|
+| `tshock.annoy` | User can use annoyance commands on other players. | `/annoy`, `/rocket`, `/firework` |
+| `tshock.canchat` | Player can send chat messages. | None |
+| `tshock.clear` | User can clear dropped items or projectiles. | `/clear` |
+| `tshock.godmode` | Player regenerates health as damage is taken (can be one-shot). | `/godmode` (`/god`) |
+| `tshock.godmode.other` | User can toggle godmode on other players. | None |
+| `tshock.heal` | User can heal players. | `/heal` |
+| `tshock.info` | User can view server information. | `/serverinfo` |
+| `tshock.kill` | User can instantly kill other players. | `/kill` (`/slay`) |
+| `tshock.partychat` | User can use team/party chat. | `/party` (`/p`) |
+| `tshock.projectiles.usebanned` | Player can use banned projectiles. | None |
+| `tshock.reservedslot` | Allows bypassing the max player slots by up to 5 additional players. | None |
+| `tshock.respawn` | Player can respawn themselves. | `/respawn` |
+| `tshock.respawn.other` | Player can respawn other players. | None |
+| `tshock.sendemoji` | Player can send in-game emotes. | None |
+| `tshock.slap` | User can slap other players, dealing damage. | `/slap` |
+| `tshock.su` | User can temporarily elevate to Super Admin for 10 minutes. | `/su`, `/sudo` |
+| `tshock.superadmin.user` | Super admin user management (meant for superadmins only). | `/user` |
+| `tshock.synclocalarea` | Player can resync their client with the server's world state. | `/sync` |
+| `tshock.thirdperson` | User can talk in third person. | `/me` |
+| `tshock.tiles.usebanned` | Player can place banned tiles. | None |
+| `tshock.warp` | User can use warp points to teleport. | `/warp` |
+| `tshock.whisper` | User can send and receive private messages. | `/whisper` (`/w`, `/tell`, `/pm`, `/dm`), `/reply` (`/r`), `/wallow` (`/wa`) |
+
+  </Accordion>
+</AccordionGroup>

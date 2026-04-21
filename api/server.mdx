@@ -1,0 +1,289 @@
+---
+title: "REST API endpoints for server management"
+description: "TShock REST API endpoints for reading server status, executing commands, broadcasting messages, reloading config, and shutting the server down."
+---
+
+The server endpoints give you high-level control over the running TShock process. You can poll server health and player counts, run any console command and capture its output, broadcast messages to all players, reload configuration files without restarting, and gracefully shut the server down — all over HTTP. Several of these endpoints require no special permissions beyond a valid token; others need elevated rights such as `tshock.rest.maintenance` or `tshock.rest.command`.
+
+## GET /v2/server/status
+
+Get a summary of the current server state. No special permissions are required beyond a valid token. Optionally include connected player details and server rule settings by passing `players=true` and `rules=true`.
+
+<ParamField query="players" type="boolean">
+  When `true`, includes an array of connected player objects in the response.
+</ParamField>
+
+<ParamField query="rules" type="boolean">
+  When `true`, includes the current server rule settings (PvP mode, whitelist, etc.) in the response.
+</ParamField>
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl (basic)
+curl "http://localhost:7878/v2/server/status?token=your-token-here"
+```
+
+```bash curl (with players and rules)
+curl "http://localhost:7878/v2/server/status?players=true&rules=true&token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "name": "My TShock Server",
+  "serverversion": "1.4.4.9",
+  "tshockversion": "5.2.0",
+  "port": 7777,
+  "playercount": 3,
+  "maxplayers": 16,
+  "world": "My World",
+  "uptime": "0.02:15:33",
+  "serverpassword": false
+}
+```
+
+<ResponseField name="name" type="string">
+  The server name from configuration.
+</ResponseField>
+
+<ResponseField name="serverversion" type="string">
+  The Terraria game version the server is running.
+</ResponseField>
+
+<ResponseField name="tshockversion" type="string">
+  The TShock version.
+</ResponseField>
+
+<ResponseField name="port" type="integer">
+  The game port (not the REST port).
+</ResponseField>
+
+<ResponseField name="playercount" type="integer">
+  Number of currently connected players.
+</ResponseField>
+
+<ResponseField name="maxplayers" type="integer">
+  Maximum player slots configured.
+</ResponseField>
+
+<ResponseField name="world" type="string">
+  The active world name.
+</ResponseField>
+
+<ResponseField name="uptime" type="string">
+  Time elapsed since the server process started, formatted as `d.hh:mm:ss`.
+</ResponseField>
+
+<ResponseField name="serverpassword" type="boolean">
+  Whether a server password is set.
+</ResponseField>
+
+---
+
+## GET /v3/server/rawcmd
+
+Execute any TShock console command and return its output. The command runs under the identity of the token's associated user and group, so the user's own permissions are also enforced.
+
+**Required permission:** `tshock.rest.command`
+
+<ParamField query="cmd" type="string" required>
+  The full command string including any arguments, e.g. `time -set 0`.
+</ParamField>
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl "http://localhost:7878/v3/server/rawcmd?cmd=time+-set+0&token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "response": ["Time set to 0."]
+}
+```
+
+<Note>
+  URL-encode the command string when using query parameters. Spaces become `+` or `%20`, and special characters must be percent-encoded.
+</Note>
+
+---
+
+## POST /v2/server/broadcast
+
+Broadcast a message to all connected players. The message is sent as an info message (yellow text by default).
+
+**Required permission:** `tshock.rest.broadcast`
+
+<ParamField query="msg" type="string" required>
+  The message text to broadcast to all players.
+</ParamField>
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl "http://localhost:7878/v2/server/broadcast?msg=Server+restarting+in+5+minutes&token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "response": "The message was broadcasted successfully"
+}
+```
+
+---
+
+## POST /v3/server/reload
+
+Reload TShock configuration files, permissions, and regions without restarting the server process. Some changes may still require a full restart to take effect.
+
+**Required permission:** `tshock.rest.cfg`
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl "http://localhost:7878/v3/server/reload?token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "response": "Configuration, permissions, and regions reload complete. Some changes may require a server restart."
+}
+```
+
+---
+
+## POST /v2/server/off
+
+Shut down the server. Requires explicit confirmation via the `confirm=true` parameter to prevent accidental shutdowns.
+
+**Required permission:** `tshock.rest.maintenance`
+
+<ParamField query="confirm" type="boolean" required>
+  Must be `true` to confirm the shutdown. The request is rejected if this is missing or `false`.
+</ParamField>
+
+<ParamField query="message" type="string">
+  The shutdown message shown to connected players. Defaults to `"Server is shutting down"`.
+</ParamField>
+
+<ParamField query="nosave" type="boolean">
+  When `true`, shuts down without saving the world first. Defaults to `false`.
+</ParamField>
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl (graceful shutdown)
+curl "http://localhost:7878/v2/server/off?confirm=true&message=Maintenance+in+progress&token=your-token-here"
+```
+
+```bash curl (immediate shutdown without save)
+curl "http://localhost:7878/v2/server/off?confirm=true&nosave=true&token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "response": "The server is shutting down"
+}
+```
+
+<Warning>
+  This endpoint immediately begins the shutdown sequence. Ensure all players have been notified before calling it.
+</Warning>
+
+---
+
+## GET /v3/server/motd
+
+Return the contents of the server's `motd.txt` file (message of the day). No special permissions are required beyond a valid token.
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl "http://localhost:7878/v3/server/motd?token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "motd": ["Welcome to the server!", "Rules: no griefing."]
+}
+```
+
+---
+
+## GET /v3/server/rules
+
+Return the contents of the server's `rules.txt` file. No special permissions are required beyond a valid token.
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl "http://localhost:7878/v3/server/rules?token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "rules": ["1. No griefing.", "2. Respect other players."]
+}
+```
+
+---
+
+## GET /tokentest
+
+Verify that a token is valid and identify which user account it is associated with. No special permissions are required beyond a valid token.
+
+<ParamField query="token" type="string" required>
+  The REST authentication token to test.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl "http://localhost:7878/tokentest?token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "response": "Token is valid and was passed through correctly.",
+  "associateduser": "admin"
+}
+```
+
+<Tip>
+  Use this endpoint in your automation scripts to confirm a token is still active before making state-changing requests.
+</Tip>

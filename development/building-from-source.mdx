@@ -1,0 +1,83 @@
+---
+title: "Build TShock from source with .NET 9"
+description: "Clone and build TShock locally using the .NET 9 SDK, run a development server, and publish platform-specific release packages for distribution."
+---
+
+Building TShock from source gives you a local development environment for contributing to TShock itself or testing your plugins against an unreleased build. The entire build process uses standard .NET tooling — no special scripts or IDE plugins are required, though Visual Studio 2022 and Visual Studio Code both work as alternatives to the CLI.
+
+## Prerequisites
+
+- [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
+- Git with submodule support
+- A terminal (Command Prompt, PowerShell, bash, or zsh)
+
+<Note>
+If you prefer a graphical environment, Visual Studio 2022 and Visual Studio Code can open and build the solution after you complete the clone step below.
+</Note>
+
+## Clone and build
+
+<Steps>
+  <Step title="Clone the repository with submodules">
+    TShock depends on several git submodules. Pass `--recurse-submodules` to clone them all in one step.
+
+    ```bash
+    git clone https://github.com/Pryaxis/TShock.git --recurse-submodules
+    ```
+  </Step>
+  <Step title="Enter the repository">
+    ```bash
+    cd TShock
+    ```
+  </Step>
+  <Step title="Build the solution">
+    ```bash
+    dotnet build
+    ```
+
+    That's it. `dotnet build` resolves NuGet packages and compiles all projects in the solution.
+  </Step>
+</Steps>
+
+## Run a development server
+
+To launch a local Terraria server using your freshly built binaries, run the `TShockLauncher` project directly:
+
+```bash
+dotnet run --project TShockLauncher
+```
+
+This starts the server in development mode. Any changes you make to the TShockAPI project will be picked up the next time you run this command.
+
+## Publish a release package
+
+To produce a self-contained distributable release, publish with a specific runtime identifier (RID) and configuration:
+
+```bash
+cd TShockLauncher
+dotnet publish -r win-x64 -f net9.0 -c Release -p:PublishSingleFile=true --self-contained false
+```
+
+### Supported runtime identifiers
+
+| Platform | RID |
+|---|---|
+| Windows (64-bit) | `win-x64` |
+| macOS (Intel) | `osx-x64` |
+| Linux (64-bit) | `linux-x64` |
+| Linux (ARM 64-bit) | `linux-arm64` |
+| Linux (ARM 32-bit) | `linux-arm` |
+
+Substitute the `win-x64` value in the publish command with your target RID. The compiled output lands in:
+
+```text
+TShockLauncher/bin/Release/net9.0/<RID>/publish/
+```
+
+## Working with Terraria sources
+
+TSAPI plugins, including TShock, have direct access to all public fields in the `Terraria` namespace. When you need to understand the internals of Terraria's server code, Pryaxis maintains decompiled [Sources](https://github.com/Pryaxis/Sources) updated with each Terraria release.
+
+<Info>
+Access to the Sources repository is available to developers who have submitted a pull request to TShock. Reach out on the [TShock Discord](https://discord.gg/Cav9nYX) after your PR is open. Without repository access, you can decompile the server binary yourself using [ILSpy](https://github.com/icsharpcode/ILSpy).
+</Info>

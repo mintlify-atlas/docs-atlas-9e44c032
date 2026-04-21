@@ -1,0 +1,111 @@
+---
+title: "Set up MOTD and server rules in TShock"
+description: "Configure TShock's message of the day and server rules files with color codes, dynamic tokens, and the commands players use to view them."
+---
+
+TShock gives server operators two plain-text files for communicating with players: `motd.txt` for the message of the day shown at connection, and `rules.txt` for server rules players can review on demand. Both files live in the `tshock/` configuration folder alongside `config.json`, and both can be reloaded at runtime without restarting the server.
+
+## Message of the day (MOTD)
+
+The MOTD is displayed to players when they connect to the server for the first time in a session, and any time they run `/motd`. It is configured by editing `tshock/motd.txt`.
+
+The default MOTD shipped with TShock demonstrates color formatting and dynamic tokens:
+
+```text
+Welcome to [c/ffff00:%map%] on [c/7ddff8:T][c/81dbf6:S][c/86d7f4:h][c/8ad3f3:o][c/8ecef1:c][c/93caef:k] for [c/55d284:T][c/62d27a:e][c/6fd16f:r][c/7cd165:r][c/89d15a:a][c/95d150:r][c/a4d145:i][c/b1d03b:a].
+[c/FFFFFF:Online players (%onlineplayers%/%serverslots%):] [c/FFFF00:%players%]
+Type [c/55D284:%specifier%][c/62D27A:h][c/6FD16F:e][c/7CD165:l][c/89D15A:p] for a list of commands.
+```
+
+### Dynamic tokens
+
+TShock substitutes the following tokens at display time:
+
+| Token | Description |
+|---|---|
+| `%map%` | The name of the current world. |
+| `%onlineplayers%` | The number of players currently connected. |
+| `%players%` | A comma-separated list of connected player names. |
+| `%serverslots%` | The total number of player slots. |
+| `%specifier%` | The configured command specifier (default: `/`). |
+
+### Color formatting
+
+Terraria's chat tag syntax is supported in `motd.txt`. The format is:
+
+```text
+[c/RRGGBB:text]
+```
+
+Where `RRGGBB` is a six-character hex color code and `text` is the string to colorize. For example:
+
+```text
+[c/FF0000:This text is red]
+[c/00FF00:This text is green]
+[c/0000FF:This text is blue]
+```
+
+All standard [Terraria chat tags](https://terraria.fandom.com/wiki/Chat#Tags) are supported because they are rendered client-side — new tags added by Terraria updates will work automatically without a TShock update.
+
+### Reloading the MOTD
+
+Apply changes to `motd.txt` while the server is running:
+
+```bash
+/reload
+```
+
+This requires the `tshock.cfg.reload` permission.
+
+## Server rules
+
+The rules file at `tshock/rules.txt` contains your server's rules, displayed to any player who runs `/rules`. Each line in the file is sent as a separate chat message. Rules are also reloaded by `/reload`.
+
+A simple `rules.txt` example:
+
+```text
+1. No griefing or destroying other players' builds.
+2. Respect all players and staff.
+3. No hacking, duplication, or exploits.
+4. PvP is only allowed in designated zones.
+5. Decisions by admins are final.
+```
+
+## In-game commands
+
+### `/motd`
+
+Displays the message of the day to the player who runs it. No special permission is required beyond basic chat access.
+
+```bash
+/motd
+```
+
+### `/rules`
+
+Displays the contents of `rules.txt` to the player who runs it.
+
+```bash
+/rules
+```
+
+### `/broadcast`
+
+Sends a message to every connected player. Requires `tshock.admin.broadcast`. The broadcast message color is controlled by `BroadcastRGB` in `config.json`.
+
+```bash
+/broadcast <message>
+# Aliases: /bc, /say
+```
+
+<Tip>
+  Use `/broadcast` for time-sensitive announcements such as scheduled restarts or in-game events. For persistent information, keep `motd.txt` and `rules.txt` up to date.
+</Tip>
+
+## Permissions reference
+
+| Permission | Description |
+|---|---|
+| `tshock.admin.broadcast` | Can broadcast server-wide messages with `/broadcast` (also `/bc`, `/say`). |
+| `tshock.cfg.reload` | Can reload `motd.txt`, `rules.txt`, and `config.json` with `/reload`. |
+| `tshock.canchat` | Baseline permission required to send and receive messages. |

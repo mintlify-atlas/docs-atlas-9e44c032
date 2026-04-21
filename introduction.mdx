@@ -1,0 +1,104 @@
+---
+title: "TShock: Terraria server management framework"
+description: "TShock adds anti-cheat, server-side characters, permissions, bans, REST API, and plugin support to Terraria servers. GPL-3.0 licensed and community-driven."
+---
+
+TShock is a toolbox for Terraria servers and communities. It runs as a plugin on the [Terraria Server API (TSAPI)](https://github.com/Pryaxis/TerrariaAPI-Server) and layers a full server management framework on top of the vanilla Terraria dedicated server — adding anti-cheat, server-side characters, a group and permissions system, an item ban list, a REST API, and an extensible plugin architecture. It is open source under the GPL-3.0 license and maintained by [Pryaxis](https://github.com/Pryaxis) with contributions from the broader community.
+
+## What TShock solves
+
+Running a vanilla Terraria server gives players direct, largely unchecked access to the world. Without server-side enforcement, clients can modify their own characters, send invalid packets, and grief other players. TShock intercepts those packets, validates them, and enforces configurable rules server-side — giving operators control over who can do what, and automatically rolling back or rejecting invalid actions.
+
+## Key features
+
+<CardGroup cols={2}>
+  <Card title="Anti-cheat (Bouncer)" icon="shield-check">
+    Rate-limit and validate tile placements, tile kills, liquid sets, projectile creation, and damage values. Suspicious actions are automatically reverted or the player is disabled.
+  </Card>
+  <Card title="Server-side characters (SSC)" icon="person">
+    Store inventory, health, mana, and equipment on the server instead of the client. Prevents players from bringing in items from other worlds or modified clients.
+  </Card>
+  <Card title="Groups and permissions" icon="users">
+    Assign players to named groups (guest, default, owner, superadmin, etc.) with fine-grained permission nodes. Inherit permissions across groups using a parent-child hierarchy.
+  </Card>
+  <Card title="REST API" icon="code">
+    A built-in HTTP REST API (default port 7878) lets external tools and dashboards query and control the server. Token-based authentication keeps it secure.
+  </Card>
+  <Card title="Ban system" icon="ban">
+    Ban players by IP address, UUID, or account name. The ban manager records reasons, timestamps, and the banning admin for every entry.
+  </Card>
+  <Card title="Plugin support" icon="puzzle-piece">
+    Drop plugin DLLs into the `ServerPlugins` folder and they load automatically at startup. TShock exposes a hook system so plugins can respond to game events, register commands, and extend the REST API.
+  </Card>
+  <Card title="Region protection" icon="map">
+    Define named rectangular regions in the world and restrict who can build or interact within them. Regions can be assigned to groups or individual users.
+  </Card>
+  <Card title="Warp system" icon="location-dot">
+    Create named warp points that players can teleport to with a single command. Warps are stored in the TShock database and persist across restarts.
+  </Card>
+</CardGroup>
+
+## How TShock fits together
+
+TShock is itself a TSAPI plugin (`TShockAPI.dll`) that ships inside the `ServerPlugins` folder. The launcher binary (`TShock.Server.exe` on Windows, `TShock.Server` on other platforms) is a thin wrapper around the Terraria dedicated server that bootstraps TSAPI, which then loads TShock and any other plugins before the game loop starts.
+
+At runtime TShock maintains a set of static managers that plugins and commands can reach directly:
+
+| Manager | Purpose |
+|---|---|
+| `TShock.Bans` | Create, query, and remove bans |
+| `TShock.Groups` | Define and modify permission groups |
+| `TShock.UserAccounts` | Register and authenticate player accounts |
+| `TShock.Regions` | Manage protected world regions |
+| `TShock.Warps` | Manage server-defined warp points |
+| `TShock.CharacterDB` | Store and load SSC character data |
+| `TShock.RestApi` | Authenticate REST API tokens |
+| `TShock.ItemBans` | Ban items from being used or spawned |
+
+## Data storage
+
+By default TShock stores all server data in a SQLite database (`tshock/tshock.sqlite`). For larger deployments you can switch to MySQL or PostgreSQL by changing `StorageType` in `tshock/config.json`. Configuration lives in two JSON files inside the `tshock/` folder:
+
+- **`config.json`** — all server settings (ports, anti-cheat thresholds, REST API, chat format, database connection, and more).
+- **`sscconfig.json`** — server-side character settings (starting inventory, starting health/mana, save interval).
+
+## Licensing and packages
+
+TShock is released under the **GPL-3.0** license. Source code is on [GitHub](https://github.com/Pryaxis/TShock). NuGet packages for embedding TShock or TSAPI into your own tooling are available at:
+
+- [TShock on NuGet](https://www.nuget.org/packages/TShock/)
+- [TSAPI on NuGet](https://www.nuget.org/packages/TSAPI/)
+
+## Community
+
+<CardGroup cols={2}>
+  <Card title="Discord" icon="discord" href="https://discord.gg/Cav9nYX">
+    Chat with the community, get help, and share plugins in real time.
+  </Card>
+  <Card title="GitHub discussions" icon="github" href="https://github.com/Pryaxis/TShock/discussions">
+    Ask questions, propose features, and discuss server administration. The best place for help if Discord isn't your preference.
+  </Card>
+  <Card title="Plugin directory" icon="grid-2" href="https://github.com/topics/tshock-plugin">
+    Browse plugins tagged `tshock-plugin` on GitHub, covering everything from economy systems to custom boss fights.
+  </Card>
+  <Card title="Source code" icon="code-branch" href="https://github.com/Pryaxis/TShock">
+    Contribute bug fixes, review open pull requests, or file issues.
+  </Card>
+</CardGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Install TShock" icon="download" href="/installation">
+    Download the release archive and get a server running on Windows, Linux, or macOS.
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Create your admin account, configure basic settings, and open the server to players in under 10 minutes.
+  </Card>
+  <Card title="Configuration reference" icon="sliders" href="/administration/configuration">
+    Browse every setting in `config.json` with descriptions and default values.
+  </Card>
+  <Card title="Plugin development" icon="plug" href="/development/overview">
+    Build your own TSAPI plugin using the TShock hook system and command API.
+  </Card>
+</CardGroup>

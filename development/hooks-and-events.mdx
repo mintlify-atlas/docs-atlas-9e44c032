@@ -1,0 +1,180 @@
+---
+title: "TShock hooks and server events for plugins"
+description: "React to server events in TShock plugins using PlayerHooks, GeneralHooks, AccountHooks, and RegionHooks — subscribe, handle, and unsubscribe cleanly."
+---
+
+TShock exposes four static hook classes — `PlayerHooks`, `GeneralHooks`, `AccountHooks`, and `RegionHooks` — that fire C# events you can subscribe to from any plugin. Each event receives a strongly typed `EventArgs` object. Some events extend `HandledEventArgs`, which means setting `args.Handled = true` prevents subsequent subscribers (and in some cases TShock itself) from processing the event further.
+
+Subscribe to hooks in `Initialize()` and always unsubscribe in `Dispose()` to avoid memory leaks or duplicate handlers across plugin reloads.
+
+## Subscribing to a hook
+
+```csharp MyPlugin.cs
+public override void Initialize()
+{
+    PlayerHooks.PlayerChat += OnPlayerChat;
+    PlayerHooks.PlayerPostLogin += OnPlayerPostLogin;
+}
+
+protected override void Dispose(bool disposing)
+{
+    if (disposing)
+    {
+        PlayerHooks.PlayerChat -= OnPlayerChat;
+        PlayerHooks.PlayerPostLogin -= OnPlayerPostLogin;
+    }
+    base.Dispose(disposing);
+}
+```
+
+## PlayerHooks
+
+`PlayerHooks` (in `TShockAPI.Hooks`) covers the player lifecycle and permission system. These are the most commonly used hooks in TShock plugins.
+
+| Event | EventArgs type | Handled? | Description |
+|---|---|---|---|
+| `PlayerPreLogin` | `PlayerPreLoginEventArgs` | Yes | Fires when a player sends login credentials. `LoginName` and `Password` are accessible. |
+| `PlayerPostLogin` | `PlayerPostLoginEventArgs` | No | Fires after a successful login. |
+| `PlayerLogout` | `PlayerLogoutEventArgs` | No | Fires when a player logs out of their account. |
+| `PlayerChat` | `PlayerChatEventArgs` | Yes | Fires before a chat message is broadcast. `RawText` and `TShockFormattedText` are both available. |
+| `PlayerCommand` | `PlayerCommandEventArgs` | Yes | Fires when any command is dispatched. Exposes `CommandName`, `CommandText`, `Parameters`, and `CommandPrefix`. |
+| `PrePlayerCommand` | `PrePlayerCommandEventArgs` | Yes | Fires immediately before a matched `Command` executes. |
+| `PostPlayerCommand` | `PostPlayerCommandEventArgs` | Yes | Fires after a `Command` finishes executing. |
+| `PlayerPermission` | `PlayerPermissionEventArgs` | — | Fires on every permission check. Set `Result` to `PermissionHookResult.Granted` or `PermissionHookResult.Denied` to override. |
+| `PlayerItembanPermission` | `PlayerItembanPermissionEventArgs` | — | Fires when an item-ban permission is checked for a player. |
+| `PlayerProjbanPermission` | `PlayerProjbanPermissionEventArgs` | — | Fires when a projectile-ban permission is checked. |
+| `PlayerTilebanPermission` | `PlayerTilebanPermissionEventArgs` | — | Fires when a tile-ban permission is checked. |
+| `PlayerHasBuildPermission` | `PlayerHasBuildPermissionEventArgs` | — | Fires on build-permission checks, providing tile coordinates `X` and `Y`. |
+
+<CodeGroup>
+```csharp Chat hook
+private void OnPlayerChat(PlayerChatEventArgs args)
+{
+    if (args.RawText.Contains("badword"))
+    {
+        args.Player.SendErrorMessage("Please keep chat clean.");
+        args.Handled = true; // Suppress the message
+    }
+}
+```
+
+```csharp Permission hook
+private void OnPlayerPermission(PlayerPermissionEventArgs args)
+{
+    // Grant a specific permission to all players
+    if (args.Permission == "myplugin.freeaccess")
+        args.Result = PermissionHookResult.Granted;
+}
+```
+
+```csharp Pre-login hook
+private void OnPlayerPreLogin(PlayerPreLoginEventArgs args)
+{
+    if (args.LoginName == "banned_user")
+    {
+        args.Player.SendErrorMessage("You are not allowed to log in.");
+        args.Handled = true;
+    }
+}
+```
+</CodeGroup>
+
+## GeneralHooks
+
+`GeneralHooks` (in `TShockAPI.Hooks`) exposes server-level events. Currently it provides one event: `ReloadEvent`, which fires whenever `/reload` is executed. This is the correct place to re-read your plugin's configuration files.
+
+```csharp
+public override void Initialize()
+{
+    GeneralHooks.ReloadEvent += OnReload;
+}
+
+private void OnReload(ReloadEventArgs args)
+{
+    // Re-read your config here
+    // args.Player is the TSPlayer who ran /reload (or TSPlayer.Server for console)
+    args.Player.SendSuccessMessage("MyPlugin configuration reloaded.");
+}
+```
+
+## AccountHooks
+
+`AccountHooks` (in `TShockAPI.Hooks`) fires when user accounts are created, deleted, or have their group changed.
+
+| Event | EventArgs type | Description |
+|---|---|---|
+| `AccountCreate` | `AccountCreateEventArgs` | Fires after a new `UserAccount` is created. |
+| `AccountDelete` | `AccountDeleteEventArgs` | Fires after a `UserAccount` is deleted. |
+| `AccountGroupUpdate` | `AccountGroupUpdateEventArgs` | Fires when a user's group is changed. Exposes `AccountName` and `Group`. If triggered by a player command, the args will be `AccountGroupUpdateByPlayerEventArgs`, which also exposes the acting `Player`. |
+
+```csharp
+public override void Initialize()
+{
+    AccountHooks.AccountCreate += OnAccountCreate;
+    AccountHooks.AccountDelete += OnAccountDelete;
+}
+
+private void OnAccountCreate(AccountCreateEventArgs args)
+{
+    TShock.Log.Info($"New account registered: {args.Account.Name}");
+}
+
+private void OnAccountDelete(AccountDeleteEventArgs args)
+{
+    TShock.Log.Info($"Account deleted: {args.Account.Name}");
+}
+```
+
+## RegionHooks
+
+`RegionHooks` (in `TShockAPI.Hooks`) fires when players enter or leave regions, and when regions are created, deleted, or renamed.
+
+| Event | EventArgs type | Description |
+|---|---|---|
+| `RegionEntered` | `RegionHooks.RegionEnteredEventArgs` | Fires when a player enters a protected region. |
+| `RegionLeft` | `RegionHooks.RegionLeftEventArgs` | Fires when a player leaves a protected region. |
+| `RegionCreated` | `RegionHooks.RegionCreatedEventArgs` | Fires after a new region is created. |
+| `RegionDeleted` | `RegionHooks.RegionDeletedEventArgs` | Fires after a region is deleted. |
+| `RegionRenamed` | `RegionHooks.RegionRenamedEventArgs` | Fires after a region is renamed. Exposes `OldName` and `NewName`. |
+
+<CodeGroup>
+```csharp Region entry/exit
+public override void Initialize()
+{
+    RegionHooks.RegionEntered += OnRegionEntered;
+    RegionHooks.RegionLeft += OnRegionLeft;
+}
+
+private void OnRegionEntered(RegionHooks.RegionEnteredEventArgs args)
+{
+    args.Player.SendInfoMessage($"You entered region: {args.Region.Name}");
+}
+
+private void OnRegionLeft(RegionHooks.RegionLeftEventArgs args)
+{
+    args.Player.SendInfoMessage($"You left region: {args.Region.Name}");
+}
+```
+
+```csharp Region lifecycle
+public override void Initialize()
+{
+    RegionHooks.RegionCreated += OnRegionCreated;
+    RegionHooks.RegionRenamed += OnRegionRenamed;
+}
+
+private void OnRegionCreated(RegionHooks.RegionCreatedEventArgs args)
+{
+    TShock.Log.Info($"Region created: {args.Region.Name}");
+}
+
+private void OnRegionRenamed(RegionHooks.RegionRenamedEventArgs args)
+{
+    TShock.Log.Info($"Region renamed from '{args.OldName}' to '{args.NewName}'");
+}
+```
+</CodeGroup>
+
+<Warning>
+Always unsubscribe from hooks in `Dispose(bool disposing)`. Failing to do so causes handlers to accumulate on server reload, running your handler multiple times per event.
+</Warning>

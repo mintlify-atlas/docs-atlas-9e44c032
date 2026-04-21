@@ -1,0 +1,101 @@
+---
+title: 'TShock command-line parameters and flags'
+description: 'Configure TShock at startup using command-line parameters for world selection, port binding, player limits, logging paths, and more.'
+---
+
+TShock accepts command-line parameters that let you configure the server at startup without editing config files. Options passed on the command line always override their counterparts in `config.json`. This makes them especially useful in automated environments, game server panels, and Docker containers where you want deterministic startup behavior.
+
+## Autostarting without the interactive prompt
+
+To bypass the interactive world-selection prompt and start the server non-interactively, you must supply `-world`, `-port`, and `-maxplayers` together:
+
+<CodeGroup>
+
+```bash Linux
+./TShock.Server -world /root/worlds/MyWorld.wld -port 7777 -maxplayers 8
+```
+
+```bash Windows
+TShock.Server.exe -world "C:\Terraria\worlds\MyWorld.wld" -port 7777 -maxplayers 8
+```
+
+</CodeGroup>
+
+## All parameters
+
+### World and server identity
+
+| Flag | Description |
+|---|---|
+| `-world <path>` | Load the world file at the given **absolute** path immediately on startup. Example: `-world /root/MyWorld.wld` |
+| `-worldselectpath <path>` | Set the directory TShock searches for world files. Example: `-worldselectpath /root` |
+| `-worldname <name>` | Load a world by name from the configured `worldselectpath`. Example: `-worldname MyWorld` (loads `MyWorld.wld`) |
+| `-autocreate <1\|2\|3>` | If no world is found, automatically create one at the given size (`1` = small, `2` = medium, `3` = large). |
+| `-worldevil <random\|corrupt\|crimson>` | Set the evil biome type for newly created worlds. Has no effect on existing worlds. |
+| `-difficulty <0\|1\|2\|3>` | Set the difficulty for newly created worlds: `0` normal, `1` expert, `2` master, `3` journey. Has no effect on existing worlds. |
+| `-motd "<message>"` | Set the base game message of the day. Example: `-motd "Welcome to my server!"` |
+
+### Network
+
+| Flag | Description |
+|---|---|
+| `-port <port>` | Bind the server to the given port. Default is `7777`. Ports below `1000` typically require elevated privileges. |
+| `-ip <address>` | Bind the server to a specific IPv4 address. Use `-ip 0.0.0.0` to bind all interfaces. |
+| `-maxplayers <n>`, `-players <n>` | Set the maximum concurrent player count. The theoretical maximum is `255`. |
+| `-pass <password>`, `-password <password>` | Set the server join password. Example: `-pass mypassword` |
+
+### Paths and logging
+
+| Flag | Description |
+|---|---|
+| `-configpath <path>` | Set the root directory TShock uses for config files and the SQLite database. Example: `-configpath /tshock` |
+| `-logpath <path>` | Override the default log directory. Example: `-logpath /tshock/logs` |
+| `-logformat "<format>"` | Set the date format used in log file names (C# date format strings). Default: `yyyy-MM-dd_HH-mm-ss` |
+| `-logclear` | Overwrite existing log files instead of creating new ones. Useful in Docker or CI environments. |
+| `-crashdir <path>` | Save crash dumps to the given path. Example: `-crashdir /tshock/crashes` |
+| `-config <path>` | Load a specific config file instead of the default. Example: `-config /etc/tshock/config.json` |
+
+### Plugins and libraries
+
+| Flag | Description |
+|---|---|
+| `-additionalplugins <path>` | Load plugins from the given directory **in addition to** `ServerPlugins/`. Useful when multiple servers share the same plugin set. |
+| `-loadlib <path>` | Instruct the base game to load a library at the specified path. Example: `-loadlib /opt/MyLibrary.dll` |
+| `-ignoreversion` | Skip API version checks for plugins, allowing older plugins to run. Use with caution. |
+
+### Tile providers
+
+| Flag | Description |
+|---|---|
+| `-constileation`, `-c` | Use the Constileation tile provider — lower memory usage than the default, and faster than HeapTile. Experimental. |
+| `-heaptile` | Use the HeapTile tile provider — lower memory usage than the default, but slower than Constileation. Experimental. |
+
+### Server behavior
+
+| Flag | Description |
+|---|---|
+| `-forceupdate` | Keep the server running and the world ticking even when no players are connected (grass grows, time passes, CPU runs). |
+| `-autoshutdown` | Enable the base game's automatic shutdown feature. |
+| `-secure` | Enable the base game's antispam feature. |
+| `-dump` | Dump permissions and config file descriptions to stdout for documentation purposes, then exit. |
+
+<Note>
+TShock also passes through all vanilla Terraria server flags. For example, `-lang` is a vanilla flag and continues to work alongside TShock-specific parameters.
+</Note>
+
+## Running with Docker
+
+When using the official Docker image, pass TShock parameters as arguments after the image name. The container already injects `-configpath`, `-logpath`, `-crashdir`, `-worldselectpath`, and `-additionalplugins` automatically:
+
+```bash
+docker run -p 7777:7777 -p 7878:7878 \
+           -v /srv/tshock:/tshock \
+           -v /srv/worlds:/worlds \
+           -v /srv/plugins:/plugins \
+           --rm -it ghcr.io/pryaxis/tshock:latest \
+           -world /worlds/MyWorld.wld -maxplayers 16 -motd "Hello!"
+```
+
+<Warning>
+Do not pass `-configpath`, `-logpath`, `-crashdir`, `-worldselectpath`, or `-additionalplugins` manually when using the official Docker image — those flags are already set by the container entrypoint and duplicating them may cause unexpected behavior.
+</Warning>

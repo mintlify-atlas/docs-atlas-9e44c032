@@ -1,0 +1,175 @@
+---
+title: "Manage groups and permissions in TShock"
+description: "Learn how TShock's group system works, how to assign permission nodes, and how to create and manage custom groups for your server."
+---
+
+TShock controls what players can do through a group and permission system. Every player belongs to exactly one group at a time, and each group carries a list of permission nodes that unlock specific commands or behaviors. Groups can inherit from a parent group, allowing you to build a clean privilege hierarchy without duplicating permission lists.
+
+## Default group hierarchy
+
+TShock ships with a set of built-in groups that form a hierarchy from unauthenticated guests to trusted administrators. Each group inherits from the one above it in the chain.
+
+| Group | Parent | Purpose |
+|---|---|---|
+| `guest` | — | Unauthenticated players. Can chat, build, register, and log in. |
+| `default` | `guest` | Registered and logged-in players. Gains warps, whispers, painting, and more. |
+| `vip` | `default` | Players with a reserved server slot and minor extra permissions. |
+| `newadmin` | `vip` | Junior moderators. Can kick, mute, and manage the spawn. |
+| `admin` | `newadmin` | Full moderators. Can ban, teleport, broadcast, and manage warps. |
+| `trustedadmin` | `admin` | Senior admins. Gains full world control, item commands, and anti-cheat bypasses. |
+| `owner` | `trustedadmin` | Server owners. Gains group management, region management, and item/tile ban management. |
+| `superadmin` | — | Implicitly has every permission (`*`). Not stored in the database. |
+
+<Note>
+  The `superadmin` group is a special in-memory group — it always has every permission. The `DefaultGuestGroupName` (default: `"guest"`) and `DefaultRegistrationGroupName` (default: `"default"`) can be changed in `config.json`.
+</Note>
+
+## Permission node categories
+
+Permission nodes are dot-separated strings in the format `tshock.<category>.<action>`. Wildcard nodes like `tshock.world.*` grant every permission in that category.
+
+### Account permissions
+
+| Node | Description |
+|---|---|
+| `tshock.account.register` | Can register an account in-game with `/register`. |
+| `tshock.account.login` | Can log in with `/login`. |
+| `tshock.account.logout` | Can log out with `/logout`. |
+| `tshock.account.changepassword` | Can change their password with `/password`. |
+
+### Admin permissions
+
+| Node | Description |
+|---|---|
+| `tshock.admin.ban` | Can ban players with `/ban`. |
+| `tshock.admin.kick` | Can kick players with `/kick`. |
+| `tshock.admin.mute` | Can mute and unmute players with `/mute` and `/unmute`. |
+| `tshock.admin.broadcast` | Can broadcast server-wide messages with `/broadcast`. |
+| `tshock.admin.group` | Can manage groups with `/group`. |
+| `tshock.admin.region` | Can manage regions with `/region`. |
+| `tshock.admin.warp` | Can manage warps. |
+| `tshock.admin.itemban` | Can manage item bans with `/itemban`. |
+| `tshock.admin.projectileban` | Can manage projectile bans with `/projban`. |
+| `tshock.admin.tileban` | Can manage tile bans with `/tileban`. |
+| `tshock.admin.nokick` | Prevents the player from being kicked. |
+| `tshock.admin.viewlogs` | Server log messages are forwarded to this player. |
+| `tshock.admin.savessi` | Can save all SSC (server-side character) states with `/savessc` and `/overridessc`. |
+| `tshock.admin.tempgroup` | Can temporarily change another player's group with `/tempgroup`. |
+| `tshock.admin.userinfo` | Can get other users' info with `/userinfo`. |
+
+### World permissions
+
+| Node | Description |
+|---|---|
+| `tshock.world.modify` | Can modify the world (place/break tiles). |
+| `tshock.world.paint` | Can paint tiles. |
+| `tshock.world.hardmode` | Can toggle hardmode with `/hardmode`. |
+| `tshock.world.save` | Can save the world with `/save`. |
+| `tshock.world.setspawn` | Can set the world spawn with `/setspawn`. |
+| `tshock.world.events` | Can use the `/worldevent` command. |
+| `tshock.world.time.set` | Can set the time with `/time`. |
+| `tshock.world.editregion` | Can edit regions. |
+| `tshock.world.editspawn` | Can toggle spawn protection with `/protectspawn`. |
+
+### Ignore (anti-cheat bypass) permissions
+
+These nodes let trusted players bypass specific anti-cheat checks. Grant them carefully.
+
+| Node | Description |
+|---|---|
+| `tshock.ignore.ssc` | Bypasses server-side character checks entirely. |
+| `tshock.ignore.damage` | Prevents actions from being blocked due to high damage. |
+| `tshock.ignore.removetile` | Bypasses kill-tile abuse detection. |
+| `tshock.ignore.placetile` | Bypasses place-tile abuse detection. |
+| `tshock.ignore.liquid` | Bypasses liquid-set abuse detection. |
+| `tshock.ignore.projectile` | Bypasses projectile abuse detection. |
+| `tshock.ignore.paint` | Bypasses paint abuse detection. |
+| `tshock.ignore.itemstack` | Bypasses stack-hack detection. |
+| `tshock.ignore.hp` | Bypasses abnormal HP detection. |
+| `tshock.ignore.mp` | Bypasses abnormal MP detection. |
+
+### Teleport permissions
+
+| Node | Description |
+|---|---|
+| `tshock.tp.self` | Can teleport to others with `/tp`. |
+| `tshock.tp.others` | Can teleport other players with `/tphere`. |
+| `tshock.tp.allothers` | Can teleport everyone to themselves. |
+| `tshock.tp.pos` | Can teleport to tile coordinates with `/tppos`. |
+| `tshock.tp.home` | Can use `/home`. |
+| `tshock.tp.spawn` | Can use `/spawn`. |
+| `tshock.tp.wormhole` | Can use wormhole potions. |
+| `tshock.tp.pylon` | Can use pylons to teleport. |
+| `tshock.tp.rod` | Can use the Rod of Discord. |
+
+### Other common permissions
+
+| Node | Description |
+|---|---|
+| `tshock.canchat` | Can chat. |
+| `tshock.whisper` | Can send and receive private messages with `/whisper` and `/reply`. |
+| `tshock.warp` | Can use warps with `/warp`. |
+| `tshock.reservedslot` | Can join up to 5 slots above the server's max. |
+| `tshock.godmode` | Enables god mode on themselves with `/godmode`. |
+| `tshock.item.give` | Can give items to others with `/give`. |
+| `tshock.item.spawn` | Can spawn items for themselves with `/item`. |
+| `tshock.su` | Can temporarily elevate to superadmin for 10 minutes with `/su`. |
+| `tshock.cfg.reload` | Can reload server configuration with `/reload`. |
+| `tshock.cfg.whitelist` | Can modify the whitelist with `/whitelist`. |
+
+## Group management commands
+
+All group commands require the `tshock.admin.group` permission.
+
+```bash
+# Create a new group with a parent
+/group add <groupname> <parent>
+
+# Add one or more permissions to a group
+/group addperm <groupname> <permission> [permission2] ...
+
+# Remove permissions from a group
+/group delperm <groupname> <permission> [permission2] ...
+
+# Delete a group
+/group del <groupname>
+
+# List all groups
+/group list
+
+# Show a group's permissions and parent
+/group info <groupname>
+```
+
+## Permission inheritance
+
+Groups inherit all permissions from their parent group. A child group's own permissions are merged with every ancestor's permissions. You can also negate an inherited permission by prefixing it with `!`:
+
+```bash
+# Deny tshock.warp for the 'restricted' group even if its parent grants it
+/group addperm restricted !tshock.warp
+```
+
+Wildcards grant every node under a namespace. For example, `tshock.world.*` grants every `tshock.world.*` permission at once.
+
+## Creating a custom group
+
+The following example creates a `builder` group that inherits from `default` and adds permissions to paint and edit the spawn:
+
+```bash
+/group add builder default
+/group addperm builder tshock.world.paint
+/group addperm builder tshock.world.editspawn
+```
+
+To move a player into this group permanently, use the user command (requires `tshock.superadmin.user`):
+
+```bash
+/user group <username> builder
+```
+
+To move a player temporarily:
+
+```bash
+/tempgroup <player> builder
+```

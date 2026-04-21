@@ -1,0 +1,351 @@
+---
+title: "Configure your TShock server"
+description: "A complete guide to TShock's config.json, covering anti-cheat, player limits, chat formatting, ban settings, and the REST API."
+---
+
+TShock stores its primary configuration in `tshock/config.json`, created automatically on first launch. Every setting in this file controls a distinct aspect of server behavior — from how many players can connect, to how aggressively the anti-cheat system responds to suspicious tile edits. After changing values, apply them at runtime with `/reload` (requires `tshock.cfg.reload`) rather than restarting the server.
+
+## Anti-cheat and world protection
+
+TShock's anti-cheat system watches for abnormal player behavior and can warn, disable, or kick offenders automatically. The thresholds below define how many actions per second trigger a response.
+
+<AccordionGroup>
+  <Accordion title="AutoSave">
+    Enable or disable Terraria's built-in world auto save.
+
+    **Type**: `Boolean` | **Default**: `true`
+  </Accordion>
+  <Accordion title="AnnounceSave">
+    Enable or disable world save announcements shown in chat.
+
+    **Type**: `Boolean` | **Default**: `true`
+  </Accordion>
+  <Accordion title="SaveWorldOnCrash">
+    Whether to save the world if the server crashes from an unhandled exception.
+
+    **Type**: `Boolean` | **Default**: `true`
+  </Accordion>
+  <Accordion title="SaveWorldOnLastPlayerExit">
+    Whether to save the world when the last player disconnects.
+
+    **Type**: `Boolean` | **Default**: `true`
+  </Accordion>
+  <Accordion title="RangeChecks">
+    Enable or disable anti-cheat range checks based on distance between the player and their block placements.
+
+    **Type**: `Boolean` | **Default**: `true`
+  </Accordion>
+  <Accordion title="TileKillThreshold">
+    Disables a player and reverts their actions if this number of tile kills is exceeded within 1 second.
+
+    **Type**: `Int32` | **Default**: `60`
+  </Accordion>
+  <Accordion title="TilePlaceThreshold">
+    Disables a player and reverts their actions if this number of tile places is exceeded within 1 second.
+
+    **Type**: `Int32` | **Default**: `32`
+  </Accordion>
+  <Accordion title="TileLiquidThreshold">
+    Disables a player if this number of liquid sets is exceeded within 1 second.
+
+    **Type**: `Int32` | **Default**: `50`
+  </Accordion>
+  <Accordion title="TilePaintThreshold">
+    Disables a player if this number of tiles is painted within 1 second.
+
+    **Type**: `Int32` | **Default**: `15`
+  </Accordion>
+  <Accordion title="ProjectileThreshold">
+    Disable a player if this number of projectiles is created within 1 second.
+
+    **Type**: `Int32` | **Default**: `50`
+  </Accordion>
+  <Accordion title="MaxDamage">
+    The maximum damage a player or NPC can inflict.
+
+    **Type**: `Int32` | **Default**: `1175`
+  </Accordion>
+  <Accordion title="MaxProjDamage">
+    The maximum damage a projectile can inflict.
+
+    **Type**: `Int32` | **Default**: `1175`
+  </Accordion>
+  <Accordion title="PreventBannedItemSpawn">
+    Prevent banned items from being spawned or given with commands.
+
+    **Type**: `Boolean` | **Default**: `false`
+  </Accordion>
+  <Accordion title="DisableBuild">
+    Disables any placing or removal of blocks server-wide.
+
+    **Type**: `Boolean` | **Default**: `false`
+  </Accordion>
+  <Accordion title="SpawnProtection">
+    Prevents tiles from being placed within `SpawnProtectionRadius` tiles of the default spawn.
+
+    **Type**: `Boolean` | **Default**: `true`
+  </Accordion>
+  <Accordion title="SpawnProtectionRadius">
+    The tile radius around the spawn tile that is protected by `SpawnProtection`.
+
+    **Type**: `Int32` | **Default**: `10`
+  </Accordion>
+</AccordionGroup>
+
+## Player limits and connection settings
+
+<AccordionGroup>
+  <Accordion title="MaxSlots">
+    Maximum number of clients connected at once. To show a "Server is full" message, set this to your desired player cap and set Terraria's max players 2 higher.
+
+    **Type**: `Int32` | **Default**: `8`
+  </Accordion>
+  <Accordion title="ReservedSlots">
+    The number of reserved slots past your max server slots that can be joined by players with the `tshock.reservedslot` permission.
+
+    **Type**: `Int32` | **Default**: `20`
+  </Accordion>
+  <Accordion title="ServerPort">
+    The port the server runs on.
+
+    **Type**: `Int32` | **Default**: `7777`
+  </Accordion>
+  <Accordion title="ServerPassword">
+    The server password required to join. Leave empty for no password.
+
+    **Type**: `String` | **Default**: `""`
+  </Accordion>
+  <Accordion title="RequireLogin">
+    Require all players to register or log in before being allowed to play.
+
+    **Type**: `Boolean` | **Default**: `false`
+  </Accordion>
+  <Accordion title="MaximumLoginAttempts">
+    Number of failed login attempts before kicking the player.
+
+    **Type**: `Int32` | **Default**: `3`
+  </Accordion>
+  <Accordion title="KickEmptyUUID">
+    Kick clients that don't send their UUID to the server.
+
+    **Type**: `Boolean` | **Default**: `false`
+  </Accordion>
+  <Accordion title="DisableUUIDLogin">
+    Prevents users from being able to log in with their client UUID.
+
+    **Type**: `Boolean` | **Default**: `false`
+  </Accordion>
+  <Accordion title="AllowLoginAnyUsername">
+    Allows users to log in to any account even if the username doesn't match their character name.
+
+    **Type**: `Boolean` | **Default**: `true`
+  </Accordion>
+  <Accordion title="HardcoreOnly">
+    Prevents non-hardcore players from connecting.
+
+    **Type**: `Boolean` | **Default**: `false`
+  </Accordion>
+  <Accordion title="MediumcoreOnly">
+    Prevents softcore players from connecting.
+
+    **Type**: `Boolean` | **Default**: `false`
+  </Accordion>
+  <Accordion title="SoftcoreOnly">
+    Prevents non-softcore players from connecting.
+
+    **Type**: `Boolean` | **Default**: `false`
+  </Accordion>
+  <Accordion title="BackupInterval">
+    The interval between backups, in minutes. Backups are stored in `tshock/backups`.
+
+    **Type**: `Int32` | **Default**: `10`
+  </Accordion>
+  <Accordion title="BackupKeepFor">
+    How long backups are kept, in minutes. For example, `2880` = 2 days.
+
+    **Type**: `Int32` | **Default**: `240`
+  </Accordion>
+</AccordionGroup>
+
+## World modification settings
+
+<AccordionGroup>
+  <Accordion title="AllowCorruptionCreep">
+    Allows the corruption to spread in hardmode.
+
+    **Type**: `Boolean` | **Default**: `true`
+  </Accordion>
+  <Accordion title="AllowCrimsonCreep">
+    Allows the crimson to spread in hardmode.
+
+    **Type**: `Boolean` | **Default**: `true`
+  </Accordion>
+  <Accordion title="AllowHallowCreep">
+    Allows the hallow to spread in hardmode.
+
+    **Type**: `Boolean` | **Default**: `true`
+  </Accordion>
+  <Accordion title="DisableHardmode">
+    If enabled, hardmode will not be activated by the Wall of Flesh or the `/starthardmode` command.
+
+    **Type**: `Boolean` | **Default**: `false`
+  </Accordion>
+  <Accordion title="PvPMode">
+    Sets the PvP mode. Valid values: `"normal"`, `"always"`, `"disabled"`.
+
+    **Type**: `String` | **Default**: `"normal"`
+  </Accordion>
+  <Accordion title="RegionProtectChests">
+    Whether region protection should apply to chests.
+
+    **Type**: `Boolean` | **Default**: `false`
+  </Accordion>
+  <Accordion title="RegionProtectGemLocks">
+    Whether region protection should apply to gem locks.
+
+    **Type**: `Boolean` | **Default**: `true`
+  </Accordion>
+</AccordionGroup>
+
+## Ban and whitelist settings
+
+<AccordionGroup>
+  <Accordion title="EnableWhitelist">
+    Enable or disable the whitelist based on IP addresses in `whitelist.txt`.
+
+    **Type**: `Boolean` | **Default**: `false`
+  </Accordion>
+  <Accordion title="WhitelistKickReason">
+    The reason given when kicking players not on the whitelist.
+
+    **Type**: `String` | **Default**: `"You are not on the whitelist."`
+  </Accordion>
+  <Accordion title="DisableDefaultIPBan">
+    Disables IP bans by default if no arguments are passed to the ban command.
+
+    **Type**: `Boolean` | **Default**: `false`
+  </Accordion>
+  <Accordion title="BanOnHardcoreDeath">
+    Whether to ban hardcore players on death.
+
+    **Type**: `Boolean` | **Default**: `false`
+  </Accordion>
+  <Accordion title="KickOnHardcoreDeath">
+    Whether to kick hardcore players on death.
+
+    **Type**: `Boolean` | **Default**: `false`
+  </Accordion>
+</AccordionGroup>
+
+## Chat settings
+
+<AccordionGroup>
+  <Accordion title="ChatFormat">
+    Changes in-game chat format. Tokens: `{0}` = Group Name, `{1}` = Group Prefix, `{2}` = Player Name, `{3}` = Group Suffix, `{4}` = Chat Message.
+
+    **Type**: `String` | **Default**: `"{1}{2}{3}: {4}"`
+  </Accordion>
+  <Accordion title="ChatAboveHeadsFormat">
+    Changes the player name shown in chat-above-heads. Same token set as `ChatFormat` but without the message token.
+
+    **Type**: `String` | **Default**: `"{2}"`
+  </Accordion>
+  <Accordion title="EnableChatAboveHeads">
+    Whether to display chat messages above players' heads.
+
+    **Type**: `Boolean` | **Default**: `false`
+  </Accordion>
+  <Accordion title="BroadcastRGB">
+    The RGB color values for broadcast messages, as `[R, G, B]`. Max value: 255.
+
+    **Type**: `Int32[]`
+  </Accordion>
+  <Accordion title="CommandSpecifier">
+    Specifies which character starts a command. Must be a single character.
+
+    **Type**: `String` | **Default**: `"/"`
+  </Accordion>
+  <Accordion title="CommandSilentSpecifier">
+    Specifies which character starts a silent command (output is not broadcast). Must be a single character.
+
+    **Type**: `String` | **Default**: `"."`
+  </Accordion>
+</AccordionGroup>
+
+## REST API settings
+
+TShock exposes an HTTP REST API for external integrations. The API is disabled by default.
+
+<AccordionGroup>
+  <Accordion title="RestApiEnabled">
+    Enable or disable the REST API.
+
+    **Type**: `Boolean` | **Default**: `false`
+  </Accordion>
+  <Accordion title="RestApiPort">
+    The port used by the REST API.
+
+    **Type**: `Int32` | **Default**: `7878`
+  </Accordion>
+  <Accordion title="ApplicationRestTokens">
+    A dictionary of named REST tokens that external applications may use to authenticate queries to the server.
+
+    **Type**: `Dictionary`
+  </Accordion>
+  <Accordion title="EnableTokenEndpointAuthentication">
+    Whether to require token authentication to use the public REST API endpoints.
+
+    **Type**: `Boolean` | **Default**: `false`
+  </Accordion>
+  <Accordion title="RESTMaximumRequestsPerInterval">
+    The maximum number of REST requests in the bucket before denying requests. Minimum value: 5.
+
+    **Type**: `Int32` | **Default**: `5`
+  </Accordion>
+  <Accordion title="RESTRequestBucketDecreaseIntervalMinutes">
+    How often in minutes the REST requests bucket is decreased by one. Minimum value: 1 minute.
+
+    **Type**: `Int32` | **Default**: `1`
+  </Accordion>
+  <Accordion title="LogRest">
+    Whether to log REST API connections.
+
+    **Type**: `Boolean` | **Default**: `false`
+  </Accordion>
+</AccordionGroup>
+
+## Example configuration snippet
+
+The following is a partial `config.json` showing common settings for a survival server:
+
+```json
+{
+  "Settings": {
+    "MaxSlots": 20,
+    "ReservedSlots": 5,
+    "ServerPort": 7777,
+    "RequireLogin": true,
+    "AutoSave": true,
+    "AnnounceSave": true,
+    "SaveWorldOnCrash": true,
+    "SpawnProtection": true,
+    "SpawnProtectionRadius": 10,
+    "ChatFormat": "{1}{2}{3}: {4}",
+    "PvPMode": "normal",
+    "EnableWhitelist": false,
+    "RestApiEnabled": false
+  }
+}
+```
+
+## Reloading configuration at runtime
+
+Players with the `tshock.cfg.reload` permission can apply changes from `config.json` without restarting the server:
+
+```bash
+/reload
+```
+
+<Note>
+  Not all settings take effect immediately on reload. Settings that affect server startup behavior (such as `ServerPort`) require a full restart.
+</Note>

@@ -1,0 +1,222 @@
+---
+title: "TShock config.json field reference"
+description: "Complete reference for every field in TShock's config.json, with types, default values, and descriptions to help you customize your Terraria server."
+---
+
+TShock's configuration is stored in `tshock/config.json` and controls nearly every aspect of server behavior — from world physics and player limits to anti-cheat thresholds, REST API settings, and chat formatting. Reload an updated config without restarting using `/reload`. This page documents every configuration field, organized by category.
+
+<Note>
+  Boolean fields accept `true` or `false`. Array fields such as `BroadcastRGB` and `SuperAdminChatRGB` take comma-separated integer values (e.g., `[255, 128, 0]`). Changes to most fields take effect after a `/reload` without restarting the server.
+</Note>
+
+---
+
+## World & Building
+
+Settings that affect world physics, biome spreading, tile placement, and build permissions.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `AllowCorruptionCreep` | Boolean | `true` | Allows the corruption biome to spread during hardmode. |
+| `AllowCrimsonCreep` | Boolean | `true` | Allows the crimson biome to spread during hardmode. |
+| `AllowHallowCreep` | Boolean | `true` | Allows the hallow biome to spread during hardmode. |
+| `AllowCutTilesAndBreakables` | Boolean | `false` | Allows players to break temporary tiles (grass, pots, etc.) in areas where they cannot normally build. |
+| `AllowIce` | Boolean | `false` | Allows ice placement in areas where a player cannot normally build. |
+| `BombExplosionRadius` | Integer | `5` | The tile radius in which a bomb can damage tiles from its detonation point. |
+| `DisableBuild` | Boolean | `false` | Disables all block placement and removal for all players. |
+| `DisableClownBombs` | Boolean | `false` | Prevents clown bomb projectiles from spawning. |
+| `DisableDungeonGuardian` | Boolean | `false` | Stops the dungeon guardian from spawning; sends players to spawn instead. |
+| `DisableHardmode` | Boolean | `false` | Prevents hardmode from activating via the Wall of Flesh or any command. |
+| `DisablePrimeBombs` | Boolean | `false` | Prevents Skeletron Prime's bombs from spawning. Useful for protecting For the Worthy seed worlds. |
+| `DisableSnowBalls` | Boolean | `false` | Prevents snowball projectiles from spawning. |
+| `IgnoreChestStacksOnLoad` | Boolean | `false` | Allows item stacks in chests to exceed the stack limit when the world loads. |
+| `IgnoreProjKill` | Boolean | `false` | Skips validation checks for whether a player is allowed to destroy a projectile. |
+| `IgnoreProjUpdate` | Boolean | `false` | Skips validation checks for whether a player is allowed to update a projectile. |
+| `PreventDeadModification` | Boolean | `true` | Prevents dead players from interacting with the world. |
+| `PreventInvalidPlaceStyle` | Boolean | `true` | Prevents players from placing tiles using an invalid style value. |
+| `RangeChecks` | Boolean | `true` | Enables anti-cheat distance checks between a player and their block placements. |
+| `RegionProtectChests` | Boolean | `false` | Applies region protection rules to chests within the region. |
+| `RegionProtectGemLocks` | Boolean | `true` | Applies region protection rules to gem locks within the region. |
+| `SpawnProtection` | Boolean | `true` | Prevents tile modifications within `SpawnProtectionRadius` tiles of the world spawn. |
+| `SpawnProtectionRadius` | Integer | `10` | The tile radius around the spawn point protected by `SpawnProtection`. |
+| `SuppressPermissionFailureNotices` | Boolean | `false` | Suppresses server-side build-permission-failure warnings from regions and spawn protection. |
+| `DisableModifiedZenith` | Boolean | `false` | Prohibits using the Zenith projectile with non-weapon items. |
+
+---
+
+## Player & Accounts
+
+Settings that control player authentication, login behavior, character modes, and account management.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `AllowLoginAnyUsername` | Boolean | `true` | Allows players to log in to any account even if its name does not match their character name. |
+| `AllowRegisterAnyUsername` | Boolean | `false` | Allows players to register a username that does not match their current character name. |
+| `BCryptWorkFactor` | Integer | `7` | BCrypt hashing rounds (computed as 2^n). Increasing this value forces all passwords to be re-hashed at next login. Range: 5–31. |
+| `BanOnHardcoreDeath` | Boolean | `false` | Bans hardcore-mode players when they die. |
+| `BanOnMediumcoreDeath` | Boolean | `false` | Bans mediumcore-mode players when they die. |
+| `DefaultGuestGroupName` | String | `guest` | The group name applied to unregistered players on join. |
+| `DefaultRegistrationGroupName` | String | `default` | The group name applied to players when they register a new account. |
+| `DisableLoginBeforeJoin` | Boolean | `false` | Prevents players from authenticating before they finish the connection handshake. |
+| `DisableUUIDLogin` | Boolean | `false` | Prevents players from logging in using their client UUID. |
+| `GiveItemsDirectly` | Boolean | `false` | Inserts items given by commands directly into the player's inventory (requires SSC). Experimental — may cause item loss. |
+| `HardcoreBanReason` | String | `Death results in a ban` | The ban reason displayed when a hardcore player is banned on death. |
+| `HardcoreBanReason` | String | `Death results in a ban` | The ban reason displayed when a hardcore player is banned on death. |
+| `HardcoreKickReason` | String | `Death results in a kick` | The kick reason displayed when a hardcore player is kicked on death. |
+| `HardcoreOnly` | Boolean | `false` | Rejects connections from players not in hardcore mode. |
+| `KickEmptyUUID` | Boolean | `false` | Kicks clients that do not send a UUID during connection. |
+| `KickOnHardcoreDeath` | Boolean | `false` | Kicks hardcore-mode players when they die. |
+| `KickOnMediumcoreDeath` | Boolean | `false` | Kicks mediumcore-mode players when they die. |
+| `MaxHP` | Integer | `500` | Maximum HP a player may have before equipment bonuses. |
+| `MaxMP` | Integer | `200` | Maximum MP a player may have before equipment bonuses. |
+| `MaximumLoginAttempts` | Integer | `3` | Number of failed login attempts before the player is kicked. |
+| `MediumcoreBanReason` | String | `Death results in a ban` | The ban reason displayed when a mediumcore player is banned on death. |
+| `MediumcoreKickReason` | String | `Death results in a kick` | The kick reason displayed when a mediumcore player is kicked on death. |
+| `MediumcoreOnly` | Boolean | `false` | Rejects connections from softcore (classic) players. |
+| `MinimumPasswordLength` | Integer | `4` | Minimum character length for new account passwords. Cannot be set below 4. |
+| `RememberLeavePos` | Boolean | `false` | Remembers a player's last position by IP. Does not persist through server restarts. |
+| `RequireLogin` | Boolean | `false` | Requires all players to register or log in before they can interact with the world. |
+| `RespawnBossSeconds` | Integer | `0` | Seconds a player must wait before respawning when a boss is nearby. Range: 0–30. |
+| `RespawnSeconds` | Integer | `0` | Seconds a player must wait before respawning normally. Range: 0–15. |
+| `SoftcoreOnly` | Boolean | `false` | Rejects connections from non-softcore (non-classic) players. |
+
+---
+
+## Server
+
+General server settings: slots, networking, saving, invasions, PvP, and diagnostics.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `AnnounceSave` | Boolean | `true` | Broadcasts a message to players when the world is saved. |
+| `AnonymousBossInvasions` | Boolean | `true` | Suppresses announcements when a boss spawns or an invasion begins. |
+| `AutoSave` | Boolean | `true` | Enables Terraria's built-in periodic world auto-save. |
+| `BackupInterval` | Integer | `10` | Minutes between world backups. Backups are stored in `tshock/backups/`. |
+| `BackupKeepFor` | Integer | `240` | How long (in minutes) backup files are kept before being deleted. `2880` = 2 days. |
+| `CommandSilentSpecifier` | String | `.` | Prefix character that runs a command silently (not visible in logs broadcast to players). Maximum 1 character. |
+| `CommandSpecifier` | String | `/` | Prefix character that triggers a command. Maximum 1 character. |
+| `DebugLogs` | Boolean | `false` | Outputs debug-level messages from system internals to the log. |
+| `DefaultMaximumSpawns` | Integer | `5` | Default maximum number of mobs per spawn wave. |
+| `DefaultSpawnRate` | Integer | `600` | Default delay between spawn waves. Lower values increase mob frequency. |
+| `DisableCustomDeathMessages` | Boolean | `true` | Prevents players from crafting custom death messages. Disable only if you have an alternative solution. |
+| `DisableSecondUpdateLogs` | Boolean | `false` | Prevents `OnSecondUpdate` diagnostic checks from writing to the log. |
+| `DisableSpewLogs` | Boolean | `true` | Prevents log messages from being sent as in-game messages to players with the log permission. |
+| `DisableTombstones` | Boolean | `true` | Disables tombstone drops on death for all players. |
+| `DisplayIPToAdmins` | Boolean | `false` | Shows a connecting player's IP address to users with the log permission. |
+| `EnableChatAboveHeads` | Boolean | `false` | Displays chat messages floating above the speaking player's head. |
+| `EnableGeoIP` | Boolean | `false` | Announces a player's geographic location (based on IP) when they connect. |
+| `EnableWhitelist` | Boolean | `false` | Enables IP-based whitelist enforcement using the `whitelist.txt` file. |
+| `ForceTime` | String | `normal` | Forces the world time. Valid values: `normal`, `day`, `night`. |
+| `InfiniteInvasion` | Boolean | `false` | Makes invasion events never end. The event must still be started manually. |
+| `InvasionMultiplier` | Integer | `1` | Scales invasion size. Formula: `100 + (multiplier × active players with >200 HP)`. |
+| `KickOnDamageThresholdBroken` | Boolean | `false` | Kicks players who exceed the `MaxDamage` threshold. |
+| `KickOnHealOtherThresholdBroken` | Boolean | `false` | Kicks players who exceed the `HealOtherThreshold` rate. |
+| `KickOnProjectileThresholdBroken` | Boolean | `false` | Kicks players who exceed the `ProjectileThreshold` rate. |
+| `KickOnTileKillThresholdBroken` | Boolean | `false` | Kicks players who exceed the `TileKillThreshold` rate. |
+| `KickOnTileLiquidThresholdBroken` | Boolean | `false` | Kicks players who exceed the `TileLiquidThreshold` rate. |
+| `KickOnTilePaintThresholdBroken` | Boolean | `false` | Kicks players who exceed the `TilePaintThreshold` rate. |
+| `KickOnTilePlaceThresholdBroken` | Boolean | `false` | Kicks players who exceed the `TilePlaceThreshold` rate. |
+| `KickProxyUsers` | Boolean | `true` | Kicks players identified as using a proxy when GeoIP is enabled. |
+| `LogPath` | String | `tshock/logs` | Directory where log files are written. |
+| `MaxDamage` | Integer | `1175` | Maximum damage a player or NPC can deal per hit. |
+| `MaxProjDamage` | Integer | `1175` | Maximum damage a single projectile can deal. |
+| `MaxRangeForDisabled` | Integer | `10` | Maximum tile distance a disabled player can move from where they were frozen. |
+| `MaxSlots` | Integer | `8` | Maximum number of simultaneous player connections. |
+| `PvPMode` | String | `normal` | PvP enforcement mode. Valid values: `normal`, `always`, `disabled`. |
+| `ReservedSlots` | Integer | `20` | Number of extra slots above `MaxSlots` available to players with the `tshock.reservedslot` permission. |
+| `RevertToTextLogsOnSqlFailures` | Integer | `10` | Number of SQL log insertion failures before falling back to text file logging. |
+| `SaveWorldOnCrash` | Boolean | `true` | Saves the world if the server crashes due to an unhandled exception. |
+| `SaveWorldOnLastPlayerExit` | Boolean | `true` | Saves the world when the last player disconnects. |
+| `ServerFullNoReservedReason` | String | `Server is full. No reserved slots open.` | Kick reason when the server is full and no reserved slots are available. |
+| `ServerFullReason` | String | `Server is full` | Kick reason when the server is full. |
+| `ServerName` | String | *(empty)* | Replaces the world name during a session when `UseServerName` is `true`. |
+| `ServerPassword` | String | *(empty)* | Password required to join the server. Leave empty for no password. |
+| `ServerPort` | Integer | `7777` | The port the Terraria server listens on. |
+| `ShowBackupAutosaveMessages` | Boolean | `true` | Broadcasts a message to players when a backup auto-save occurs. |
+| `StatueSpawn200` | Integer | `3` | Maximum NPCs a statue can spawn within a 200-pixel radius before it stops spawning. |
+| `StatueSpawn600` | Integer | `6` | Maximum NPCs a statue can spawn within a 600-pixel radius before it stops spawning. |
+| `StatueSpawnWorld` | Integer | `10` | Maximum NPCs a statue can spawn globally before it stops spawning. |
+| `UseServerName` | Boolean | `false` | When `true`, uses `ServerName` instead of the world name. |
+| `UseSqlLogs` | Boolean | `false` | Saves log output to the SQL database instead of a text file. |
+| `WhitelistKickReason` | String | `You are not on the whitelist.` | Kick reason given to players not on the whitelist. |
+| `ForceHalloween` | Boolean | `false` | Forces Halloween-specific events (goodie bags, pumpkins) year-round. |
+| `ForceXmas` | Boolean | `false` | Forces Christmas-specific events (presents, Santa) year-round. |
+
+---
+
+## Anti-cheat & Security
+
+Threshold values and flags that control TShock's built-in anti-cheat detection systems.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `AllowAllowedGroupsToSpawnBannedItems` | Boolean | `false` | Allows groups on the banned item allow-list to spawn banned items even when `PreventBannedItemSpawn` is `true`. |
+| `DisableDefaultIPBan` | Boolean | `false` | Disables IP banning as the default ban type when no argument is passed to `/ban`. |
+| `DisableInvisPvP` | Boolean | `false` | Makes invisible players visible to other clients while PvP is active. |
+| `HealOtherThreshold` | Integer | `50` | Disables a player if more than this many `HealOtherPlayer` packets are sent within one second. |
+| `IgnoreChestStacksOnLoad` | Boolean | `false` | Bypasses stack limit checks for items in chests during world load. |
+| `IgnoreProjKill` | Boolean | `false` | Disables the check for whether a player can destroy a projectile. |
+| `IgnoreProjUpdate` | Boolean | `false` | Disables the check for whether a player can update a projectile. |
+| `KickOnDamageThresholdBroken` | Boolean | `false` | Kicks players who exceed `MaxDamage`. |
+| `KickOnHealOtherThresholdBroken` | Boolean | `false` | Kicks players who exceed `HealOtherThreshold`. |
+| `KickOnProjectileThresholdBroken` | Boolean | `false` | Kicks players who exceed `ProjectileThreshold`. |
+| `KickOnTileKillThresholdBroken` | Boolean | `false` | Kicks players who exceed `TileKillThreshold`. |
+| `KickOnTileLiquidThresholdBroken` | Boolean | `false` | Kicks players who exceed `TileLiquidThreshold`. |
+| `KickOnTilePaintThresholdBroken` | Boolean | `false` | Kicks players who exceed `TilePaintThreshold`. |
+| `KickOnTilePlaceThresholdBroken` | Boolean | `false` | Kicks players who exceed `TilePlaceThreshold`. |
+| `MaxDamage` | Integer | `1175` | Maximum damage dealt per hit before the player's action is flagged. |
+| `MaxProjDamage` | Integer | `1175` | Maximum damage a projectile may deal before it is flagged. |
+| `PreventBannedItemSpawn` | Boolean | `false` | Prevents banned items from being spawned or given via commands. |
+| `ProjectileThreshold` | Integer | `50` | Disables a player if more than this many projectiles are created within one second. |
+| `ProjIgnoreShrapnel` | Boolean | `true` | Excludes crystal bullet shrapnel from the `ProjectileThreshold` count. |
+| `TileKillThreshold` | Integer | `60` | Disables a player and reverts their changes if this many tiles are destroyed within one second. |
+| `TileLiquidThreshold` | Integer | `50` | Disables a player if this many liquid placements occur within one second. |
+| `TilePaintThreshold` | Integer | `15` | Disables a player if this many tiles are painted within one second. |
+| `TilePlaceThreshold` | Integer | `32` | Disables a player and reverts their changes if this many tiles are placed within one second. |
+
+---
+
+## Database
+
+Settings for configuring the TShock database backend.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `StorageType` | String | `sqlite` | Database engine to use. Valid values: `sqlite`, `mysql`. |
+| `SqliteDBPath` | String | `tshock.sqlite` | File path for the SQLite database. |
+| `MySqlHost` | String | `localhost:3306` | Hostname and port for the MySQL server. |
+| `MySqlDbName` | String | *(empty)* | MySQL database name to connect to. |
+| `MySqlUsername` | String | *(empty)* | Username for the MySQL connection. |
+| `MySqlPassword` | String | *(empty)* | Password for the MySQL connection. |
+
+---
+
+## REST API
+
+Settings for TShock's built-in HTTP REST API.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `RestApiEnabled` | Boolean | `false` | Enables or disables the REST API server. |
+| `RestApiPort` | Integer | `7878` | The port the REST API listens on. |
+| `ApplicationRestTokens` | Dictionary | *(empty)* | A dictionary of named REST tokens for external application access. |
+| `EnableTokenEndpointAuthentication` | Boolean | `false` | Requires token authentication even for public REST endpoints. |
+| `LogRest` | Boolean | `false` | Logs all REST API connections to the server log. |
+| `RESTMaximumRequestsPerInterval` | Integer | `5` | Maximum REST requests allowed per rate-limit bucket before requests are denied. Minimum: 5. |
+| `RESTRequestBucketDecreaseIntervalMinutes` | Integer | `1` | How often (in minutes) the rate-limit bucket decreases by one. Minimum: 1. |
+
+---
+
+## Chat
+
+Settings for customizing in-game chat formatting and appearance.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `BroadcastRGB` | Integer[] | `[127, 255, 212]` | RGB color used for broadcast messages. Format: `[R, G, B]`, max value per channel: 255. |
+| `ChatAboveHeadsFormat` | String | `{2}` | Format string for player names shown above heads. Uses the same placeholders as `ChatFormat` but excludes the message. |
+| `ChatFormat` | String | `{1}{2}{3}: {4}` | Format string for chat messages. Placeholders: `{0}` = Group Name, `{1}` = Group Prefix, `{2}` = Player Name, `{3}` = Group Suffix, `{4}` = Chat Message. |
+| `EnableChatAboveHeads` | Boolean | `false` | Displays chat messages floating above the speaking player's head in-game. |
+| `SuperAdminChatPrefix` | String | `(Super Admin) ` | The text prefix prepended to superadmin chat messages. |
+| `SuperAdminChatRGB` | Integer[] | `[255, 0, 0]` | RGB color for superadmin chat messages. Format: `[R, G, B]`, max value per channel: 255. |
+| `SuperAdminChatSuffix` | String | *(empty)* | The text suffix appended to superadmin chat messages. |

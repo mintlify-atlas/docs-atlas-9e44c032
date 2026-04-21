@@ -1,0 +1,115 @@
+---
+title: "Server-side characters (SSC) in TShock"
+description: "Set up TShock SSC to store player inventories and stats server-side, preventing item duplication and controlling starting gear for all players."
+---
+
+By default, Terraria lets players bring their characters — and everything in their inventory — from any world or server. Server-side characters (SSC) reverses this: when SSC is enabled, the server becomes the authoritative source for each player's inventory, health, mana, and progression. Clients no longer save character data to disk during an SSC session, so players cannot carry external items in or take server items out.
+
+SSC is the standard way to run competitive, economy, or adventure servers where fair item access matters. It was introduced through a collaboration between Zidonuke and Re-Logic, and TShock's implementation is the reference implementation for the feature.
+
+## How SSC works
+
+When a player connects to an SSC-enabled server:
+
+1. The client signals that it is ready to receive server-side data.
+2. TShock loads that player's stored character from the database.
+3. If no record exists (new player), TShock sends the configured `StartingInventory`.
+4. When the player disconnects, TShock saves their current state back to the database.
+
+The player's **local** character file is untouched throughout — it is simply ignored while connected.
+
+## Setting up SSC
+
+<Steps>
+  <Step title="Open sscconfig.json">
+    The SSC configuration file is separate from `config.json`. It lives at `tshock/sscconfig.json` and is created automatically on first launch.
+  </Step>
+  <Step title="Enable SSC">
+    Set `Enabled` to `true` inside the `Settings` object:
+
+    ```json
+    {
+      "Settings": {
+        "Enabled": true,
+        "ServerSideCharacterSave": 5,
+        "LogonDiscardThreshold": 250,
+        "StartingHealth": 100,
+        "StartingMana": 20,
+        "StartingInventory": [
+          { "netID": -15, "prefix": 0, "stack": 1 },
+          { "netID": -13, "prefix": 0, "stack": 1 },
+          { "netID": -16, "prefix": 0, "stack": 1 }
+        ],
+        "WarnPlayersAboutBypassPermission": true
+      }
+    }
+    ```
+
+    The example above gives new players bronze equipment (netIDs `-15`, `-13`, `-16`).
+  </Step>
+  <Step title="Restart the server">
+    SSC takes effect on the next server start. Existing players will receive the starting inventory the first time they connect after SSC is enabled.
+  </Step>
+</Steps>
+
+## Configuration reference
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `Enabled` | `Boolean` | `false` | Enables server-side characters. |
+| `ServerSideCharacterSave` | `Int32` | `5` | How often SSC saves, in minutes. |
+| `LogonDiscardThreshold` | `Int32` | `250` | Time in milliseconds after login during which item drops are blocked. |
+| `StartingHealth` | `Int32` | `100` | Starting HP for new players. |
+| `StartingMana` | `Int32` | `20` | Starting mana for new players. |
+| `StartingInventory` | `List` | Bronze gear | List of items given to new players. |
+| `WarnPlayersAboutBypassPermission` | `Boolean` | `true` | Logs a warning when a player with `tshock.ignore.ssc` connects. |
+
+## Configuring the starting inventory
+
+Each entry in `StartingInventory` is an object with three fields:
+
+| Field | Description |
+|---|---|
+| `netID` | The Terraria item ID. Use negative IDs for armor/accessories (e.g., `-15` for Bronze Helmet). |
+| `prefix` | The item modifier ID. `0` means no modifier. |
+| `stack` | The number of items in the stack. |
+
+The following example adds the Zenith sword (netID `4956`) to the default bronze starting kit:
+
+```json
+"StartingInventory": [
+  { "netID": -15, "prefix": 0, "stack": 1 },
+  { "netID": -13, "prefix": 0, "stack": 1 },
+  { "netID": -16, "prefix": 0, "stack": 1 },
+  { "netID": 4956, "prefix": 0, "stack": 1 }
+]
+```
+
+## Loadout synchronization caveats
+
+<Warning>
+  In TShock 5 (Terraria 1.4.4.x), **data loss or corruption may occur** with loadout synchronization. If a player is debuffed, crowd-controlled, or dead when a loadout sync packet arrives, the client will silently ignore it. TShock's `Disable()` method, webbing, and other debuffs can cause the server and client to desynchronize. Advise players not to use items or change loadouts while debuffed. Proxy tools such as Dimensions that may debuff players during a server switch are also affected.
+</Warning>
+
+## Admin commands for SSC
+
+| Command | Permission | Description |
+|---|---|---|
+| `/uploadssc` | `tshock.ssc.upload` | Uploads the player's character data from when they joined as their SSC data. |
+| `/overridessc <player>` | `tshock.admin.savessi` | Saves the player's current in-game state directly to the SSC database. |
+| `/savessc` | `tshock.admin.savessi` | Saves all connected players' SSC states immediately. |
+
+The distinction between `/uploadssc` and `/overridessc` is important:
+
+- `/uploadssc` uses the snapshot taken when the player **joined**, before any in-game changes.
+- `/overridessc` captures the player's **current** live state.
+
+## Playing as an admin on an SSC server
+
+Accounts with the `tshock.ignore.ssc` permission bypass SSC entirely — they use their local character file and their data is not saved to the server database. TShock recommends that admins play in the `owner` group rather than `superadmin` to avoid this bypass:
+
+<Info>
+  The `superadmin` group implicitly holds every permission including `tshock.ignore.ssc`. Use the `owner` group or a custom admin group for day-to-day play.
+</Info>
+
+If `WarnPlayersAboutBypassPermission` is `true`, the server console will log a warning whenever a player with `tshock.ignore.ssc` connects and has existing SSC data that will not be saved.

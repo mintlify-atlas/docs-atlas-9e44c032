@@ -1,0 +1,213 @@
+---
+title: "REST API endpoints for group management"
+description: "TShock REST API v2 group endpoints for creating, reading, listing, updating, and deleting permission groups on your Terraria server."
+---
+
+Groups in TShock define what players and REST tokens are allowed to do. Each group holds a set of permission nodes, an optional parent group from which permissions are inherited, and a chat color. The REST group endpoints let you manage groups programmatically without touching the TShock console. Reading group information requires `tshock.rest.groups.view`; creating, updating, or deleting groups requires `tshock.rest.groups.manage`.
+
+## GET /v2/groups/list
+
+List all groups in the TShock database, including their names, parent groups, and chat colors.
+
+**Required permission:** `tshock.rest.groups.view`
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl "http://localhost:7878/v2/groups/list?token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "groups": [
+    {
+      "name": "default",
+      "parent": "guest",
+      "chatcolor": "255,255,255"
+    },
+    {
+      "name": "admin",
+      "parent": "default",
+      "chatcolor": "255,0,0"
+    }
+  ]
+}
+```
+
+---
+
+## GET /v2/groups/read
+
+Display detailed information for a specific group, including its full permission list.
+
+**Required permission:** `tshock.rest.groups.view`
+
+<ParamField query="group" type="string" required>
+  The name of the group to look up.
+</ParamField>
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl "http://localhost:7878/v2/groups/read?group=admin&token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "name": "admin",
+  "parent": "default",
+  "chatcolor": "255,0,0",
+  "permissions": "tshock.rest.kick,tshock.rest.ban",
+  "negatedpermissions": "",
+  "totalpermissions": "tshock.rest.kick,tshock.rest.ban,tshock.build"
+}
+```
+
+<ResponseField name="name" type="string">
+  The group's name.
+</ResponseField>
+
+<ResponseField name="parent" type="string">
+  The name of the parent group, or empty if none.
+</ResponseField>
+
+<ResponseField name="chatcolor" type="string">
+  The chat color as an `r,g,b` string.
+</ResponseField>
+
+<ResponseField name="permissions" type="string">
+  Permissions granted directly to this group.
+</ResponseField>
+
+<ResponseField name="negatedpermissions" type="string">
+  Permissions explicitly denied for this group (overrides parent grants).
+</ResponseField>
+
+<ResponseField name="totalpermissions" type="string">
+  The effective combined permission set including inherited parent permissions.
+</ResponseField>
+
+---
+
+## POST /v2/groups/create
+
+Create a new group. Only `group` is required; all other parameters are optional. If `chatcolor` is omitted, TShock uses the default color.
+
+**Required permission:** `tshock.rest.groups.manage`
+
+<ParamField query="group" type="string" required>
+  The name of the new group.
+</ParamField>
+
+<ParamField query="parent" type="string">
+  The name of the parent group to inherit permissions from.
+</ParamField>
+
+<ParamField query="permissions" type="string">
+  A comma-separated list of permission nodes to grant to this group.
+</ParamField>
+
+<ParamField query="chatcolor" type="string">
+  The chat color for members of this group, as an `r,g,b` string (e.g. `255,128,0`).
+</ParamField>
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl "http://localhost:7878/v2/groups/create?group=moderator&parent=default&permissions=tshock.rest.kick,tshock.rest.mute&chatcolor=0,255,128&token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "response": "Group moderator created successfully"
+}
+```
+
+---
+
+## POST /v2/groups/update
+
+Modify an existing group's parent, chat color, or permissions. Any parameter not supplied retains its current value.
+
+**Required permission:** `tshock.rest.groups.manage`
+
+<ParamField query="group" type="string" required>
+  The name of the group to modify.
+</ParamField>
+
+<ParamField query="parent" type="string">
+  The new parent group name. Omit to keep the current parent.
+</ParamField>
+
+<ParamField query="chatcolor" type="string">
+  The new chat color as an `r,g,b` string. Omit to keep the current color.
+</ParamField>
+
+<ParamField query="permissions" type="string">
+  A new comma-separated list of permissions. This **replaces** the existing permission list rather than appending to it.
+</ParamField>
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl "http://localhost:7878/v2/groups/update?group=moderator&permissions=tshock.rest.kick,tshock.rest.mute,tshock.rest.ban&token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "response": "Group moderator updated successfully"
+}
+```
+
+<Warning>
+  The `permissions` field replaces the group's entire permission list. To add a single permission, you must resend the full list including existing permissions.
+</Warning>
+
+---
+
+## DELETE /v2/groups/destroy
+
+Delete a group from the TShock database. Players assigned to this group will need to be reassigned.
+
+**Required permission:** `tshock.rest.groups.manage`
+
+<ParamField query="group" type="string" required>
+  The name of the group to delete.
+</ParamField>
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl -X DELETE "http://localhost:7878/v2/groups/destroy?group=moderator&token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "response": "Group moderator deleted successfully"
+}
+```

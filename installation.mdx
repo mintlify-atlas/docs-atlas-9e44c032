@@ -1,0 +1,217 @@
+---
+title: "Install TShock on Windows, Linux, and macOS"
+description: "Step-by-step guide to installing TShock on Windows, Linux (x64, arm64), macOS, and Docker. Requires .NET 9 runtime."
+---
+
+TShock runs on any platform that supports .NET 9, including Windows, Linux (x64, arm64, arm), and macOS. At minimum the server needs around 1 GB of RAM and a reasonably capable CPU — a Raspberry Pi 4 works for very small servers, but something more powerful is recommended for general use.
+
+## Prerequisites
+
+TShock requires the **.NET 9 runtime** (or the .NET 9 SDK if you plan to build or develop plugins). If you intend to build TShock from source, the README covers that separately using the .NET 9 SDK.
+
+<Note>
+On Windows 11 22H2 and later you may already have a compatible .NET runtime installed. Check with `dotnet --list-runtimes` in a terminal.
+</Note>
+
+Download the correct runtime for your platform from the [.NET 9 download page](https://dotnet.microsoft.com/en-us/download/dotnet/9.0) before continuing.
+
+## Install TShock
+
+<Tabs>
+  <Tab title="Windows">
+    <Steps>
+      <Step title="Install the .NET 9 runtime">
+        Download and run the [.NET 9 runtime installer for Windows](https://dotnet.microsoft.com/en-us/download/dotnet/9.0). The x64 installer covers most machines.
+      </Step>
+      <Step title="Download TShock">
+        Go to the [TShock releases page](https://github.com/TShock/TShock/releases) and download the latest stable `.zip` archive.
+      </Step>
+      <Step title="Extract the archive">
+        Extract the zip into a dedicated folder. Make sure all files land in the same directory — do not leave them nested inside a subfolder. After extraction the layout should look like this:
+
+        ```
+        TShock.Server.exe
+        bin\
+        |-- HttpServer.dll
+        |-- ModFramework.dll
+        |-- OTAPI.dll
+        |-- OTAPI.Runtime.dll
+        |-- TerrariaServer.dll
+        ServerPlugins\
+        |-- TShockAPI.dll
+        ```
+      </Step>
+      <Step title="Start the server">
+        Double-click `TShock.Server.exe`, or run it from a terminal:
+
+        ```bat
+        TShock.Server.exe
+        ```
+
+        Answer the startup prompts to select a world (or create one). TShock will create a `tshock\` folder next to the executable the first time it runs.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Linux">
+    <Steps>
+      <Step title="Install the .NET 9 runtime">
+        Follow the [Microsoft instructions](https://learn.microsoft.com/dotnet/core/install/linux) for your distribution, or use the official install script:
+
+        ```bash
+        wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
+        chmod +x dotnet-install.sh
+        ./dotnet-install.sh --channel 9.0 --runtime dotnet
+        ```
+
+        TShock supports `linux-x64`, `linux-arm64`, and `linux-arm` builds. Download the release that matches your architecture.
+      </Step>
+      <Step title="Download and extract TShock">
+        ```bash
+        # Replace the URL with the latest release asset for your architecture
+        wget https://github.com/TShock/TShock/releases/latest/download/TShock-linux-x64.zip
+        unzip TShock-linux-x64.zip -d tshock-server
+        cd tshock-server
+        ```
+
+        After extraction, the directory structure should mirror the layout shown in the Windows tab.
+      </Step>
+      <Step title="Make the binary executable">
+        ```bash
+        chmod +x TShock.Server
+        ```
+      </Step>
+      <Step title="Start the server">
+        ```bash
+        ./TShock.Server
+        ```
+
+        For unattended startup (bypassing the interactive world selection prompt), supply a world path, port, and player count:
+
+        ```bash
+        ./TShock.Server -world /path/to/MyWorld.wld -port 7777 -maxplayers 16
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="macOS (Intel)">
+    <Steps>
+      <Step title="Install the .NET 9 runtime">
+        Download and install the [.NET 9 runtime for macOS x64](https://dotnet.microsoft.com/en-us/download/dotnet/9.0).
+      </Step>
+      <Step title="Download TShock">
+        Download the `osx-x64` release from the [releases page](https://github.com/TShock/TShock/releases) and unzip it into a dedicated folder.
+      </Step>
+      <Step title="Allow the binary through Gatekeeper">
+        If macOS blocks execution because it cannot verify the developer, right-click `TShock.Server` in Finder, select **Open**, and then choose **Terminal**. Click **Open** on the security prompt. After doing this once you can launch it from the terminal normally.
+      </Step>
+      <Step title="Start the server">
+        ```bash
+        ./TShock.Server
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="macOS (Apple Silicon)">
+    TShock requires Rosetta 2 on Apple Silicon because of `W^X` memory protection requirements in [MonoMod](https://github.com/MonoMod/MonoMod). Use the `osx-x64` build — not an arm64 build.
+
+    <Steps>
+      <Step title="Install .NET 9 for x86 (not Homebrew)">
+        **Do not install .NET through Homebrew.** Download the [.NET 9 x86 SDK or runtime](https://dotnet.microsoft.com/en-us/download/dotnet/9.0) directly from Microsoft's site. The x86 package installs to `/usr/local/share/dotnet/x64/`.
+      </Step>
+      <Step title="Add the x64 .NET to your PATH">
+        ```bash
+        export PATH=$PATH:/usr/local/share/dotnet/x64/
+        ```
+
+        Add this line to your shell profile (`~/.zshrc` or `~/.bash_profile`) to make it permanent.
+      </Step>
+      <Step title="Install Rosetta 2">
+        If you haven't already installed Rosetta 2, run:
+
+        ```bash
+        sudo softwareupdate --install-rosetta --agree-to-license
+        ```
+      </Step>
+      <Step title="Download the osx-x64 release">
+        Download the `osx-x64` build from the [releases page](https://github.com/TShock/TShock/releases) and unzip it.
+      </Step>
+      <Step title="Start the server">
+        ```bash
+        ./TShock.Server
+        ```
+
+        If macOS blocks execution, right-click `TShock.Server` in Finder, select **Open**, then **Terminal**, and click **Open** on the security prompt.
+      </Step>
+    </Steps>
+
+    <Warning>
+      If you see a Rosetta error like `attachment of code signature supplement failed`, try rebooting your Mac, re-downloading the server archive, installing pending macOS updates, and re-running the `softwareupdate --install-rosetta` command.
+    </Warning>
+  </Tab>
+</Tabs>
+
+## File structure after installation
+
+Once TShock has started for the first time, the directory looks like this:
+
+```
+TShock.Server.exe          (or TShock.Server on Linux/macOS)
+bin\
+|-- HttpServer.dll
+|-- ModFramework.dll
+|-- OTAPI.dll
+|-- OTAPI.Runtime.dll
+|-- TerrariaServer.dll
+ServerPlugins\
+|-- TShockAPI.dll
+tshock\
+|-- config.json
+|-- sscconfig.json
+|-- tshock.sqlite
+|-- logs\
+```
+
+The `tshock\` folder is created automatically. It holds your configuration, SQLite database, and log files. Keep backups of this folder, especially `tshock.sqlite`.
+
+## Ports
+
+| Port | Purpose |
+|------|---------|
+| `7777` | Game traffic — Terraria clients connect here |
+| `7878` | REST API — enabled and configured in `config.json` |
+
+Make sure both ports are open in your firewall and port-forwarded on your router if you are hosting from a home network. You can change both port numbers in `config.json` or via the `-port` command-line flag.
+
+## Installing plugins
+
+Copy plugin `.dll` files into the `ServerPlugins\` folder. They are loaded automatically the next time the server starts. To load plugins from an additional directory without moving them, use the `-additionalplugins` flag:
+
+```bash
+./TShock.Server -additionalplugins /path/to/extra-plugins
+```
+
+Browse plugins tagged [`tshock-plugin`](https://github.com/topics/tshock-plugin) on GitHub.
+
+## Upgrading
+
+### Upgrading TShock 5 to a newer TShock 5 release
+
+Download the latest release, extract the archive, and merge the extracted files with your existing installation folder. The `tshock\` folder is preserved as-is — any required database migrations run automatically on startup.
+
+### Upgrading from TShock 4
+
+<Steps>
+  <Step title="Download the TShock 5 release">
+    Get the latest release from the [releases page](https://github.com/TShock/TShock/releases). Extract it to a new folder — do not overwrite your TShock 4 installation in place.
+  </Step>
+  <Step title="Copy your tshock configuration folder">
+    Copy the `tshock\` folder from your TShock 4 installation (which contains your `.sqlite` database and `.json` configuration files) into the new TShock 5 folder.
+  </Step>
+  <Step title="Start TShock 5">
+    Run `TShock.Server.exe` (or `TShock.Server` on Linux/macOS). Note that the launcher binary name has changed — it is no longer `TerrariaServer.exe`. TShock 5 also no longer requires `mono` or `mono-complete` on non-Windows platforms.
+  </Step>
+</Steps>
+
+<Warning>
+Many files from TShock 4 are no longer used in TShock 5. Do not copy the old `bin\` or `ServerPlugins\` folders — use only the ones from the new release, and re-add any third-party plugins that have been updated for TShock 5.
+</Warning>

@@ -1,23 +1,11 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
-  "name": "TShock",
+  "projectType": "framework",
+  "projectName": "TShock",
+  "projectDescription": "TShock is a server plugin framework for Terraria that provides anti-cheat, server-side characters, permissions, groups, REST API, and community management tools for server operators and plugin developers.",
   "theme": "maple",
-  "colors": {
-    "primary": "#4A90D9",
-    "light": "#7BB8F0",
-    "dark": "#2B5FA8"
-  },
-  "navbar": {
-    "primary": {
-      "type": "github",
-      "href": "https://github.com/Pryaxis/TShock"
-    }
-  },
-  "footer": {
-    "socials": {
-      "github": "https://github.com/Pryaxis/TShock"
-    }
-  },
+  "primaryColor": "#4A90D9",
+  "lightColor": "#7BB8F0",
+  "darkColor": "#2B5FA8",
   "navigation": {
     "tabs": [
       {
@@ -88,5 +76,35 @@
         ]
       }
     ]
-  }
+  },
+  "keyFeatures": [
+    "Server-side characters (SSC) with inventory management and data persistence",
+    "Permission-based group system for fine-grained player access control",
+    "Anti-cheat and exploit protection",
+    "In-game and console command system with extensible API",
+    "REST API for remote server management and integrations",
+    "Ban and moderation tools with IP, UUID, and account tracking",
+    "Region-based build protection",
+    "Plugin management via NuGet packages",
+    "Docker support for containerized deployments",
+    "Internationalization (i18n) support"
+  ],
+  "publicApiSurface": [
+    "TShockAPI.TShock (main plugin class)",
+    "TShockAPI.TSPlayer (player management)",
+    "TShockAPI.Commands (command registration and execution)",
+    "TShockAPI.Permissions (permission nodes)",
+    "TShockAPI.Hooks.PlayerHooks (player lifecycle events)",
+    "TShockAPI.Hooks.GeneralHooks (general server events)",
+    "TShockAPI.Hooks.AccountHooks (account events)",
+    "TShockAPI.Hooks.RegionHooks (region events)",
+    "TShockAPI.DB (database abstraction layer)",
+    "TShockAPI.Rest (REST API routing and authentication)",
+    "TShockAPI.Group (group and permission management)",
+    "TShockAPI.Utils (utility methods)",
+    "REST /v3/bans/* (ban management endpoints)",
+    "REST /v2/groups/* (group management endpoints)",
+    "REST /v2/players/* (player management endpoints)",
+    "REST /v3/server/* (server management endpoints)"
+  ]
 }

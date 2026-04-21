@@ -1,0 +1,207 @@
+---
+title: "REST API endpoints for ban management"
+description: "TShock REST API v3 ban endpoints for creating, viewing, listing, and deleting player bans by IP, UUID, account name, or character name."
+---
+
+TShock's ban system tracks entries by ticket number and supports multiple identifier types: IP address, UUID, account name, and character name. The v3 ban endpoints replace the older v2 routes (which now redirect) and provide full create, read, list, and delete operations. Viewing bans requires the `tshock.rest.bans.view` permission; creating and deleting bans requires `tshock.rest.bans.manage`.
+
+## Identifier format
+
+When creating a ban, the `identifier` parameter must include a type prefix:
+
+| Prefix | Example | Matches on |
+|---|---|---|
+| `ip:` | `ip:192.168.1.5` | Player IP address |
+| `uuid:` | `uuid:abc123...` | Player UUID |
+| `acc:` | `acc:alice_account` | Account name |
+| `char:` | `char:Alice` | Character name (all matching players are kicked) |
+
+---
+
+## POST /v3/bans/create
+
+Create a new ban entry. If the banned identifier matches a currently connected player, they are kicked immediately. Dates default to the current UTC time for `start` and no expiry for `end` if omitted.
+
+**Required permission:** `tshock.rest.bans.manage`
+
+<ParamField query="identifier" type="string" required>
+  The identifier to ban, including its type prefix (e.g. `ip:192.168.1.5`).
+</ParamField>
+
+<ParamField query="reason" type="string">
+  The reason to assign to the ban. Defaults to `"Banned"` if omitted.
+</ParamField>
+
+<ParamField query="start" type="string">
+  ISO 8601 datetime at which the ban becomes active. Defaults to the current UTC time.
+</ParamField>
+
+<ParamField query="end" type="string">
+  ISO 8601 datetime at which the ban expires. Defaults to never (permanent ban).
+</ParamField>
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl (by IP)
+curl "http://localhost:7878/v3/bans/create?identifier=ip:192.168.1.5&reason=Cheating&token=your-token-here"
+```
+
+```bash curl (by account, timed)
+curl "http://localhost:7878/v3/bans/create?identifier=acc:alice_account&reason=Griefing&end=2026-12-31T00:00:00Z&token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "response": "Ban added. Ticket number: 42"
+}
+```
+
+<Note>
+  Save the ticket number from the response — you need it to look up or delete this ban later.
+</Note>
+
+---
+
+## DELETE /v3/bans/destroy
+
+Delete an existing ban entry by its ticket number. By default, the ban is marked inactive rather than permanently removed from the database. Pass `fullDelete=true` to remove it entirely.
+
+**Required permission:** `tshock.rest.bans.manage`
+
+<ParamField query="ticketNumber" type="string" required>
+  The numeric ticket number of the ban to delete.
+</ParamField>
+
+<ParamField query="fullDelete" type="boolean">
+  When `true`, the ban record is permanently deleted from the database. Defaults to `false` (soft delete).
+</ParamField>
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl (soft delete)
+curl -X DELETE "http://localhost:7878/v3/bans/destroy?ticketNumber=42&token=your-token-here"
+```
+
+```bash curl (permanent delete)
+curl -X DELETE "http://localhost:7878/v3/bans/destroy?ticketNumber=42&fullDelete=true&token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "response": "Ban removed."
+}
+```
+
+---
+
+## GET /v3/bans/read
+
+View the full details of a specific ban by its ticket number.
+
+**Required permission:** `tshock.rest.bans.view`
+
+<ParamField query="ticketNumber" type="string" required>
+  The numeric ticket number to look up.
+</ParamField>
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl "http://localhost:7878/v3/bans/read?ticketNumber=42&token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "ticket_number": 42,
+  "identifier": "ip:192.168.1.5",
+  "reason": "Cheating",
+  "banning_user": "admin",
+  "start_date_ticks": 638500000000000000,
+  "end_date_ticks": 3155378975999999999
+}
+```
+
+<ResponseField name="ticket_number" type="integer">
+  The unique ticket number for this ban entry.
+</ResponseField>
+
+<ResponseField name="identifier" type="string">
+  The banned identifier, including its type prefix.
+</ResponseField>
+
+<ResponseField name="reason" type="string">
+  The reason recorded for this ban.
+</ResponseField>
+
+<ResponseField name="banning_user" type="string">
+  The username of the account that created the ban.
+</ResponseField>
+
+<ResponseField name="start_date_ticks" type="integer">
+  The ban start time as .NET ticks (100-nanosecond intervals since 0001-01-01).
+</ResponseField>
+
+<ResponseField name="end_date_ticks" type="integer">
+  The ban expiry time as .NET ticks. `3155378975999999999` represents `DateTime.MaxValue` (permanent).
+</ResponseField>
+
+---
+
+## GET /v3/bans/list
+
+View all ban entries in the TShock database.
+
+**Required permission:** `tshock.rest.bans.view`
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl "http://localhost:7878/v3/bans/list?token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "bans": [
+    {
+      "ticket_number": 42,
+      "identifier": "ip:192.168.1.5",
+      "reason": "Cheating",
+      "banning_user": "admin",
+      "start_date_ticks": 638500000000000000,
+      "end_date_ticks": 3155378975999999999
+    },
+    {
+      "ticket_number": 43,
+      "identifier": "acc:grieferX",
+      "reason": "Griefing",
+      "banning_user": "moderator",
+      "start_date_ticks": 638600000000000000,
+      "end_date_ticks": 638700000000000000
+    }
+  ]
+}
+```
+
+<Note>
+  The list includes all bans stored in the database, including soft-deleted or expired entries depending on your TShock version. Filter by `end_date_ticks` to identify active bans.
+</Note>

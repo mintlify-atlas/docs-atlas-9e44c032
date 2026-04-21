@@ -1,0 +1,158 @@
+---
+title: "Extend TShock's REST API with custom endpoints"
+description: "Add custom HTTP routes to TShock's REST API using RouteAttribute, Permission, Noun, Verb, and SecureRestCommand registered through TShock.RestApi."
+---
+
+TShock ships a built-in HTTP REST API that listens on port 7878 by default. Every request to a secured endpoint must include a valid authentication token. You can add your own routes to this API from any plugin using the same attribute-driven pattern that TShock uses internally — `RouteAttribute`, `Permission`, `Noun`, `Verb`, and `Token` — combined with `SecureRestCommand` registration through `TShock.RestApi`.
+
+## How the REST API works
+
+Clients obtain a token by authenticating against `/v2/token/create`. That token is passed as a query parameter (`?token=...`) on every subsequent request to a secured endpoint. Handler methods return `object` — typically a `RestObject` — which is serialized to JSON and sent back to the client.
+
+<Note>
+The REST API port defaults to 7878. It can be changed in `tshock/config.json` under the `RestApiPort` setting.
+</Note>
+
+## Attributes
+
+TShock defines several attributes in `TShockAPI` (from `RestManager.cs`) that document and enforce route metadata:
+
+| Attribute | Target | Description |
+|---|---|---|
+| `[Route(string route)]` | Method | Declares the URL path for this endpoint (e.g. `"/v1/myplugin/info"`). |
+| `[Permission(string name)]` | Method | Declares a permission required to call this endpoint. Can be applied multiple times. |
+| `[Noun(name, required, description, type)]` | Method | Documents a query-string parameter. `required: false` makes it optional. |
+| `[Verb(name, description, type)]` | Method | Documents a required URL segment parameter. |
+| `[Token]` | Method | Declares that this endpoint requires an authentication token. |
+
+These attributes are used for documentation and, in TShock's internal wiring, for permission enforcement. When you register via `SecureRestCommand`, token validation is enforced automatically.
+
+## Registering an endpoint
+
+Register your handler in `Initialize()` using `TShock.RestApi.Register()`:
+
+```csharp MyPlugin.cs
+public override void Initialize()
+{
+    TShock.RestApi.Register(new SecureRestCommand("/myplugin/data", GetData, "myplugin.rest.read"));
+}
+```
+
+The three arguments to `SecureRestCommand` are: the route path, the handler method, and one or more required permission strings. Callers without those permissions receive a `403` response automatically.
+
+## Handler method signature
+
+REST handlers must return `object`. Return a `RestObject` to produce a JSON response:
+
+```csharp
+private object GetData(RestRequestArgs args)
+{
+    return new RestObject()
+    {
+        { "status", "200" },
+        { "message", "Hello from MyPlugin" }
+    };
+}
+```
+
+`RestObject` is a `Dictionary<string, object>` (from `TShockAPI`) with a `Status` string property that defaults to `"200"`. Pass a status code string to the constructor to override it:
+
+```csharp
+return new RestObject("404") { Error = "Resource not found." };
+```
+
+## Full example with attributes and parameters
+
+<CodeGroup>
+```csharp Handler with attributes
+[Route("/v1/myplugin/info")]
+[Permission("myplugin.rest.info")]
+[Token]
+private object GetPluginInfo(RestRequestArgs args)
+{
+    return new RestObject()
+    {
+        { "status", "200" },
+        { "name", "MyPlugin" },
+        { "version", "1.0.0" },
+        { "online_players", TShock.Players.Count(p => p != null && p.Active) }
+    };
+}
+```
+
+```csharp Handler with query parameter
+[Route("/v1/myplugin/player")]
+[Permission("myplugin.rest.players")]
+[Noun("name", true, "The player name to look up.", typeof(string))]
+[Token]
+private object GetPlayer(RestRequestArgs args)
+{
+    var name = args.Parameters["name"];
+    if (string.IsNullOrWhiteSpace(name))
+        return new RestObject("400") { Error = "Missing parameter: name" };
+
+    var found = TSPlayer.FindByNameOrID(name);
+    if (found.Count == 0)
+        return new RestObject("404") { Error = "Player not found." };
+
+    var player = found[0];
+    return new RestObject()
+    {
+        { "status", "200" },
+        { "name", player.Name },
+        { "account", player.Account?.Name ?? "Not logged in" },
+        { "group", player.Group?.Name ?? "none" }
+    };
+}
+```
+
+```csharp Registration
+public override void Initialize()
+{
+    TShock.RestApi.Register(new SecureRestCommand("/v1/myplugin/info", GetPluginInfo, "myplugin.rest.info"));
+    TShock.RestApi.Register(new SecureRestCommand("/v1/myplugin/player", GetPlayer, "myplugin.rest.players"));
+}
+```
+</CodeGroup>
+
+## Accessing request data
+
+The `RestRequestArgs` parameter exposes:
+
+| Property | Description |
+|---|---|
+| `args.Parameters[key]` | Query-string parameter by name. |
+| `args.Verbs[key]` | URL segment captured from the route pattern (e.g. `{state}` in `/autosave/{state}`). |
+| `args.TokenData.Username` | The username associated with the token making the request. |
+| `args.TokenData.UserGroupName` | The group of the authenticated user. |
+| `args.Request` | The raw `IHttpRequest` object for low-level access. |
+
+## Authentication flow
+
+<Steps>
+  <Step title="Create a token">
+    ```text
+    POST http://localhost:7878/v2/token/create?username=admin&password=secret
+    ```
+    Returns `{"token": "abc123..."}` on success.
+  </Step>
+  <Step title="Call your endpoint">
+    ```text
+    GET http://localhost:7878/v1/myplugin/info?token=abc123...
+    ```
+    The token is validated before your handler is invoked.
+  </Step>
+  <Step title="Destroy the token when done">
+    ```text
+    GET http://localhost:7878/token/destroy/abc123...?token=abc123...
+    ```
+  </Step>
+</Steps>
+
+<Warning>
+Tokens grant the permissions of the account they were created for. Treat them like passwords — destroy them when your session ends and never log or expose them in responses.
+</Warning>
+
+## Unregistering endpoints
+
+TShock's `SecureRest` does not provide a built-in unregister method for plugin routes. For most plugins, routes registered at startup persist for the lifetime of the server process and do not need explicit cleanup. If you need runtime unregistration, use the underlying `TShock.RestApi` REST instance directly and manage route lists accordingly.

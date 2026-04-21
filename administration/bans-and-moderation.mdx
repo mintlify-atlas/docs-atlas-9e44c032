@@ -1,0 +1,126 @@
+---
+title: "Ban and moderate players on TShock servers"
+description: "Learn TShock's ban system with IP, UUID, and account identifiers, ticket-based ban management, kick, mute, and whitelist commands."
+---
+
+TShock provides a layered moderation system that lets server staff warn, silence, kick, or permanently remove players. Bans are stored in the TShock database with a ticket number for easy reference and removal. Each ban targets a specific identifier — an IP address, a client UUID, or a registered account name — which means a determined player may require multiple ban entries to be reliably blocked.
+
+## Ban identifiers
+
+TShock's ban system uses typed identifier prefixes to target different aspects of a player's identity:
+
+| Prefix | Example | Description |
+|---|---|---|
+| `ip:` | `ip:192.168.1.100` | Bans a specific IP address. |
+| `uuid:` | `uuid:a1b2c3d4...` | Bans a client by their Terraria UUID. |
+| `acc:` | `acc:PlayerName` | Bans a registered TShock account. |
+| `name:` | `name:PlayerName` | Bans a character name. |
+
+When a player connects, TShock checks all their identifiers against the ban database simultaneously. A single ban entry matching any identifier will block the connection.
+
+## Ban commands
+
+The `/ban` command requires the `tshock.admin.ban` permission.
+
+```bash
+# Ban a player (targets their IP by default unless DisableDefaultIPBan is true)
+/ban add <player> <reason>
+
+# Ban by a specific identifier
+/ban add ip:192.168.1.5 "evading ban"
+/ban add uuid:a1b2c3d4e5f6 "cheating"
+/ban add acc:PlayerName "harassment"
+
+# Add a time-limited ban (e.g., 1 day)
+/ban add <player> <reason> 1d
+
+# Remove a ban by its ticket number
+/ban del <ticketNumber>
+
+# List all active bans
+/ban list
+
+# Show details about a specific ban ticket
+/ban info <ticketNumber>
+```
+
+<Note>
+  By default, `/ban add <player>` bans the player's IP address. Set `DisableDefaultIPBan` to `true` in `config.json` to require explicit identifier prefixes instead.
+</Note>
+
+### Ban ticket system
+
+Every ban added to the database is assigned a unique **ticket number**. This number appears to the banned player when they attempt to connect:
+
+```text
+#42 - You are banned: Cheating (Never)
+#43 - You are banned: Spamming (01:12:30:00 remaining)
+```
+
+The ticket number lets moderators unambiguously reference, inspect, or remove a specific ban regardless of identifier:
+
+```bash
+/ban info 42
+/ban del 42
+```
+
+Bans with an expiration of `DateTime.MaxValue` are permanent ("Never"). Time-limited bans display a `dd:hh:mm:ss` countdown.
+
+## Kick command
+
+The `/kick` command removes a player from the server immediately without adding a database entry. It requires `tshock.admin.kick`.
+
+```bash
+/kick <player> <reason>
+```
+
+Players with the `tshock.admin.nokick` permission cannot be kicked.
+
+## Mute and unmute
+
+Muting silences a player in chat for the duration of the session. The `/mute` command doubles as `/unmute` and requires `tshock.admin.mute`.
+
+```bash
+# Mute a player
+/mute <player>
+
+# Unmute a player
+/unmute <player>
+```
+
+## Whitelist management
+
+The whitelist restricts server access to a specific list of IP addresses. Enable it by setting `EnableWhitelist` to `true` in `config.json`. Managing the whitelist requires `tshock.cfg.whitelist`.
+
+```bash
+# Add an IP to the whitelist
+/whitelist add <ip>
+
+# Remove an IP from the whitelist
+/whitelist del <ip>
+```
+
+Players not on the whitelist are kicked with the reason defined in `WhitelistKickReason` (default: `"You are not on the whitelist."`).
+
+## Hardcore and mediumcore death penalties
+
+TShock can automatically ban or kick players when their character dies, based on difficulty:
+
+| Config key | Description |
+|---|---|
+| `BanOnHardcoreDeath` | Bans hardcore characters on death. |
+| `KickOnHardcoreDeath` | Kicks hardcore characters on death. |
+| `HardcoreBanReason` | Reason shown when banning. Default: `"Death results in a ban"`. |
+| `HardcoreKickReason` | Reason shown when kicking. Default: `"Death results in a kick"`. |
+| `BanOnMediumcoreDeath` | Bans mediumcore characters on death. |
+| `KickOnMediumcoreDeath` | Kicks mediumcore characters on death. |
+
+## Moderator permissions reference
+
+| Permission | Description |
+|---|---|
+| `tshock.admin.ban` | Can execute the `/ban` command. |
+| `tshock.admin.kick` | Can execute the `/kick` command. |
+| `tshock.admin.mute` | Can mute and unmute players. |
+| `tshock.admin.nokick` | Prevents the holder from being kicked. |
+| `tshock.cfg.whitelist` | Can manage the whitelist with `/whitelist`. |

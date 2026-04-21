@@ -1,0 +1,96 @@
+---
+title: 'Run TShock in Docker containers'
+description: 'Run a TShock Terraria server in Docker with volume mounts for worlds, plugins, and config files, and expose game and REST API ports.'
+keywords: ['tshock', 'docker', 'terraria', 'container', 'volume', 'arm64', 'buildx']
+---
+
+The official TShock Docker image is published to the GitHub Container Registry and lets you run a fully isolated Terraria server without installing .NET or any other dependencies on the host. Volume mounts keep your worlds, plugins, and configuration outside the container so they survive updates and restarts.
+
+## Volume mounts
+
+The container is designed around four mount points. Map host directories to these paths using the `-v <host_path>:<container_path>` flag:
+
+| Container path | Purpose |
+|---|---|
+| `/tshock` | TShock config files, log files, and crash reports |
+| `/worlds` | Terraria world files (`.wld`) |
+| `/plugins` | Additional TShock plugins |
+| `/server` | TShock's working directory (optional) |
+
+<Note>
+The Dockerfile declares `/tshock`, `/worlds`, and `/plugins` as named volumes. Only mount `/server` if you need direct access to TShock's working directory.
+</Note>
+
+## Port mappings
+
+Expose these container ports to the host using the `-p <host_port>:<container_port>` flag:
+
+| Port | Protocol | Purpose |
+|---|---|---|
+| `7777` | TCP | Terraria game traffic |
+| `7878` | TCP | TShock REST API |
+
+## Running the server
+
+The following command starts TShock, maps the required volumes, exposes both ports, and passes `-world` and `-motd` as startup arguments. Replace the host paths with your own directories.
+
+<CodeGroup>
+
+```bash Standard run
+docker run -p 7777:7777 -p 7878:7878 \
+           -v /home/cider/tshock/:/tshock \
+           -v /home/cider/.local/share/Terraria/Worlds:/worlds \
+           -v /home/cider/tshock/plugins:/plugins \
+           --rm -it ghcr.io/pryaxis/tshock:latest \
+           -world /worlds/backflip.wld -motd "OMFG DOCKER"
+```
+
+```bash REST API only (no game port)
+docker run -p 7878:7878 \
+           -v /home/cider/tshock/:/tshock \
+           -v /home/cider/.local/share/Terraria/Worlds:/worlds \
+           --rm -it ghcr.io/pryaxis/tshock:latest \
+           -world /worlds/backflip.wld
+```
+
+</CodeGroup>
+
+The container's entrypoint automatically sets `-configpath /tshock`, `-logpath /tshock/logs`, `-crashdir /tshock/crashes`, `-worldselectpath /worlds`, and `-additionalplugins /plugins`. You only need to pass additional flags — such as `-world`, `-motd`, or `-maxplayers` — as arguments after the image name.
+
+<Tip>
+For persistent setups, use Docker Compose to define volumes, ports, and restart policies in a single file rather than repeating long `docker run` commands.
+</Tip>
+
+## Building custom images
+
+When you need customizations not available in the upstream project — such as patched dependencies or bundled plugins — build a local image from your checkout.
+
+### Build for the current platform
+
+<CodeGroup>
+
+```bash Build and load locally
+docker buildx build -t tshock:latest --load .
+```
+
+</CodeGroup>
+
+### Build for a different platform
+
+Docker Buildx supports [multi-platform images](https://docs.docker.com/build/building/multi-platform/), which lets you build for `arm64` on an `amd64` host (or vice versa). The Dockerfile supports `linux/amd64`, `linux/arm64`, and `linux/arm/v7`.
+
+<CodeGroup>
+
+```bash linux/arm64 image on any host
+docker buildx build -t tshock:linux-arm64 --platform linux/arm64 --load .
+```
+
+```bash linux/amd64 image explicitly
+docker buildx build -t tshock:linux-amd64 --platform linux/amd64 --load .
+```
+
+</CodeGroup>
+
+<Warning>
+Omit `--load` if you want to push directly to a registry with `--push`. The two flags are mutually exclusive when building for multiple platforms simultaneously.
+</Warning>

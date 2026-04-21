@@ -1,0 +1,95 @@
+---
+title: "TShock REST API overview"
+description: "TShock's built-in REST API enables remote server management over HTTP on port 7878, using token-based authentication for all requests."
+---
+
+TShock ships with a built-in HTTP REST API that lets you manage your Terraria server remotely — without needing direct console access. The API runs on port **7878** and is available as soon as TShock starts. Every request must include a valid authentication token passed as a query parameter. The API covers all major management surfaces: players, bans, groups, worlds, and server operations.
+
+## Base URL
+
+All endpoints are served from the following base URL:
+
+```text
+http://<server-ip>:7878
+```
+
+For example, a server running locally is reachable at `http://localhost:7878`.
+
+<Note>
+  The REST API uses plain HTTP by default. If you expose your server to the internet, consider placing TShock behind a reverse proxy that handles TLS termination.
+</Note>
+
+## Authentication
+
+Every REST API call requires a `token` query parameter. Tokens are either generated dynamically via the `/v2/token/create` endpoint or configured statically in `config.json` under `ApplicationRestTokens`. See the [Authentication](/api/authentication) page for full details.
+
+```bash
+curl "http://localhost:7878/v2/server/status?token=your-token-here"
+```
+
+A missing or invalid token returns a `401` or `403` response with a JSON error body.
+
+## Resource groups
+
+<CardGroup cols={2}>
+  <Card title="Players" href="/api/players">
+    List connected players, read detailed player info, kick, kill, mute, and unmute players.
+  </Card>
+  <Card title="Bans" href="/api/bans">
+    Create, view, list, and delete ban entries by ticket number, IP, UUID, or account name.
+  </Card>
+  <Card title="Groups" href="/api/groups">
+    Create, read, list, update, and delete permission groups and their parent relationships.
+  </Card>
+  <Card title="Worlds" href="/api/worlds">
+    Read world information, save the world, toggle autosave, butcher NPCs, and trigger events.
+  </Card>
+  <Card title="Server" href="/api/server">
+    Read server status, execute commands, broadcast messages, reload config, and shut down.
+  </Card>
+  <Card title="Authentication" href="/api/authentication">
+    Understand how to obtain and use tokens to authenticate REST API requests.
+  </Card>
+</CardGroup>
+
+## Quick example
+
+The following curl command fetches the current server status:
+
+```bash curl
+curl "http://localhost:7878/v2/server/status?token=your-token-here"
+```
+
+A successful response looks like:
+
+```json
+{
+  "status": "200",
+  "name": "My TShock Server",
+  "serverversion": "1.4.4.9",
+  "tshockversion": "5.2.0",
+  "port": 7777,
+  "playercount": 3,
+  "maxplayers": 16,
+  "world": "My World",
+  "uptime": "0.02:15:33",
+  "serverpassword": false
+}
+```
+
+## Token configuration
+
+Static application tokens are defined in `config.json` inside the `ApplicationRestTokens` object. Each key is the token string, and the value specifies the associated username and group:
+
+```json
+{
+  "ApplicationRestTokens": {
+    "your-token-here": {
+      "Username": "admin",
+      "UserGroupName": "superadmin"
+    }
+  }
+}
+```
+
+The group you assign determines which endpoints the token can access. See [Authentication](/api/authentication) for the complete setup guide.

@@ -1,0 +1,128 @@
+---
+title: "Protect areas with TShock regions"
+description: "Use TShock regions to protect areas of your world from unauthorized building, define owners and allowed players, and control overlapping region priority."
+---
+
+Regions are named, rectangular zones that restrict who can place or break tiles within their boundaries. Any player not listed as an owner or allowed member of a region — and not in an allowed group — will be blocked from modifying tiles inside it. Regions are tied to a specific world, so the same server can host multiple worlds each with their own independent region sets.
+
+All region management commands require the `tshock.admin.region` permission.
+
+## Creating a region
+
+<Steps>
+  <Step title="Select the region corners">
+    In-game, use the TShock region wand to mark the two opposing corners of the area you want to protect. The selection tool is typically bound to a specific item; once both corners are set, you'll see confirmation messages in chat.
+  </Step>
+  <Step title="Define the region">
+    With your corners selected, define the region with a name:
+
+    ```bash
+    /region define <regionname>
+    ```
+
+    The region is created in a protected state by default.
+  </Step>
+  <Step title="Add owners">
+    An owner can modify the region and manage its member list. The creator is not automatically added as an owner, so add yourself explicitly:
+
+    ```bash
+    /region addowner <regionname> <player>
+    ```
+  </Step>
+  <Step title="Allow additional players">
+    Grant specific players build rights inside the region without making them an owner:
+
+    ```bash
+    /region allow <player> <regionname>
+    ```
+  </Step>
+</Steps>
+
+## Full command reference
+
+### Defining and removing regions
+
+```bash
+# Define a region using the currently selected corners
+/region define <regionname>
+
+# Delete a region permanently
+/region delete <regionname>
+```
+
+### Protection toggle
+
+```bash
+# Enable or disable protection for a region
+/region protect <regionname> <true|false>
+```
+
+When protection is `false`, all players can build inside the region regardless of membership.
+
+### Managing owners
+
+Owners have build rights and can manage the region's membership list.
+
+```bash
+# Add a player as an owner of a region
+/region addowner <regionname> <player>
+
+# Remove an owner from a region
+/region delowner <regionname> <player>
+```
+
+### Managing allowed players
+
+```bash
+# Allow a player to build in a region
+/region allow <player> <regionname>
+
+# Remove a player's build access
+/region remove <player> <regionname>
+```
+
+### Listing and inspecting regions
+
+```bash
+# List all regions in the current world
+/region list
+
+# Show details about a region (bounds, owners, members, z-index)
+/region info <regionname>
+```
+
+## Region z-index and overlapping regions
+
+When two or more regions overlap, TShock uses the `Z` value (z-index) to determine which region's rules take precedence. A higher z-index means higher priority.
+
+```bash
+# Set the z-index of a region
+/region setZ <regionname> <z>
+```
+
+A region with z = 5 will override the rules of a region with z = 0 in any overlapping area. Use this to create "holes" in a larger protected area or to layer permission zones.
+
+## Chest and gem lock protection
+
+By default, region protection does **not** apply to chests within a region — any player can open and access them. To extend protection to chests, set `RegionProtectChests` to `true` in `config.json`. Gem locks are protected by regions by default (`RegionProtectGemLocks: true`).
+
+## Global build protection
+
+In addition to named regions, TShock offers two global build restrictions:
+
+| Command | Permission | Description |
+|---|---|---|
+| `/antibuild` | `tshock.admin.antibuild` | Toggles server-wide build protection (no one can build). |
+| `/protectspawn` | `tshock.world.editspawn` | Toggles protection of the spawn tile area. |
+
+The spawn area's protection radius is set by `SpawnProtectionRadius` in `config.json` (default: 10 tiles).
+
+## Permissions reference
+
+| Permission | Description |
+|---|---|
+| `tshock.admin.region` | Can use the `/region` command to manage regions. |
+| `tshock.world.editregion` | Can edit regions (used internally for region membership checks). |
+| `tshock.admin.antibuild` | Can toggle global build protection with `/antibuild`. |
+| `tshock.world.editspawn` | Can toggle spawn protection with `/protectspawn`. |
+| `tshock.world.modify` | Grants a player the ability to modify the world (standard build permission). |

@@ -1,0 +1,200 @@
+---
+title: "TShock in-game command reference"
+description: "Complete reference for TShock's in-game commands covering server administration, player management, world control, NPC spawning, teleportation, and more."
+---
+
+TShock extends Terraria's server with a rich command system accessible in-game using the `/` prefix or silently with `.`. Every command is gated by a permission node, making it easy to grant fine-grained control to players, moderators, and administrators. This page documents every built-in command registered by TShock, organized by category, including required permissions and usage syntax.
+
+<Note>
+  Commands marked **in-game only** cannot be run from the server console. The silent specifier `.` runs a command without broadcasting it to players with log permissions.
+</Note>
+
+---
+
+## Setup
+
+| Command | Permission | Description | Usage |
+|---------|------------|-------------|-------|
+| `/setup` | *(none — token-based)* | Authenticates as superadmin during first-time TShock setup. In-game only. | `/setup <token>` |
+
+---
+
+## Account Commands
+
+Commands for managing player authentication and registration.
+
+| Command | Aliases | Permission | Description | Usage |
+|---------|---------|------------|-------------|-------|
+| `/login` | — | `tshock.account.login` | Logs you into a registered account. In-game only. | `/login <password>` |
+| `/logout` | — | `tshock.account.logout` | Logs you out of your current account. In-game only. | `/logout` |
+| `/password` | — | `tshock.account.changepassword` | Changes your account's password. In-game only. | `/password <old> <new>` |
+| `/register` | — | `tshock.account.register` | Registers a new account. In-game only. | `/register <password>` |
+| `/accountinfo` | `/ai` | `tshock.accountinfo.check` | Shows registration and last-login info for a username. | `/accountinfo <username>` |
+| `/user` | — | `tshock.superadmin.user` | Manages user accounts (superadmin). | `/user <add\|del\|group\|password> <args>` |
+
+---
+
+## Administration Commands
+
+Commands for moderating the server and managing players.
+
+| Command | Aliases | Permission | Description | Usage |
+|---------|---------|------------|-------------|-------|
+| `/ban` | — | `tshock.admin.ban` | Bans a player by name, IP, or UUID. | `/ban <add\|del\|list> <args>` |
+| `/broadcast` | `/bc`, `/say` | `tshock.admin.broadcast` | Broadcasts a message to all online players. | `/broadcast <message>` |
+| `/displaylogs` | — | `tshock.admin.viewlogs` | Toggles whether you receive server log messages. | `/displaylogs` |
+| `/group` | — | `tshock.admin.group` | Manages groups (add, delete, list, permissions). | `/group <add\|del\|addperm\|delperm\|list\|info> <args>` |
+| `/itemban` | — | `tshock.admin.itemban` | Manages the item ban list. | `/itemban <add\|del\|list> <itemname>` |
+| `/projban` | — | `tshock.admin.projectileban` | Manages the projectile ban list. | `/projban <add\|del\|list> <id>` |
+| `/tileban` | — | `tshock.admin.tileban` | Manages the tile ban list. | `/tileban <add\|del\|list> <id>` |
+| `/region` | — | `tshock.admin.region` | Manages protected regions. | `/region <define\|protect\|delete\|allow\|remove\|list\|info\|clear\|resize\|tp> <args>` |
+| `/kick` | — | `tshock.admin.kick` | Removes a player from the server. | `/kick <player> [reason]` |
+| `/mute` | `/unmute` | `tshock.admin.mute` | Prevents or re-allows a player from chatting. | `/mute <player>` / `/unmute <player>` |
+| `/overridessc` | `/ossc` | `tshock.admin.savessi` | Temporarily overrides server-side characters for a player. | `/overridessc <player>` |
+| `/savessc` | — | `tshock.admin.savessi` | Saves all players' server-side character states. | `/savessc` |
+| `/uploadssc` | — | `tshock.ssc.upload` | Uploads your character data at join time as SSC data. | `/uploadssc` |
+| `/tempgroup` | — | `tshock.admin.tempgroup` | Temporarily sets another player's group. | `/tempgroup <player> <group>` |
+| `/su` | — | `tshock.su` | Temporarily elevates you to Super Admin for 10 minutes. | `/su` |
+| `/sudo` | — | `tshock.su` | Executes a command as Super Admin. | `/sudo <command>` |
+| `/userinfo` | `/ui` | `tshock.admin.userinfo` | Shows account and connection info for a player. | `/userinfo <player>` |
+
+---
+
+## Configuration Commands
+
+Commands for managing server configuration and maintenance.
+
+| Command | Aliases | Permission | Description | Usage |
+|---------|---------|------------|-------------|-------|
+| `/checkupdates` | — | `tshock.cfg.maintenance` | Checks for available TShock updates. | `/checkupdates` |
+| `/off` | `/exit`, `/stop` | `tshock.cfg.maintenance` | Saves and shuts down the server. | `/off` |
+| `/off-nosave` | `/exit-nosave`, `/stop-nosave` | `tshock.cfg.maintenance` | Shuts down the server without saving. | `/off-nosave` |
+| `/reload` | — | `tshock.cfg.reload` | Reloads the server configuration file. | `/reload` |
+| `/serverpassword` | — | `tshock.cfg.password` | Changes the server join password. | `/serverpassword <newpassword>` |
+| `/version` | — | `tshock.cfg.maintenance` | Displays the current TShock version. | `/version` |
+| `/whitelist` | — | `tshock.cfg.whitelist` | Adds or removes IPs from the server whitelist. | `/whitelist <add\|del> <ip>` |
+| `/dump-reference-data` | — | `tshock.cfg.createdumps` | Creates reference files of Terraria IDs and TShock permissions. | `/dump-reference-data` |
+
+---
+
+## Item Commands
+
+Commands for spawning and giving items.
+
+| Command | Aliases | Permission | Description | Usage |
+|---------|---------|------------|-------------|-------|
+| `/item` | `/i` | `tshock.item.spawn` | Spawns an item for yourself. In-game only. | `/item <name or id> [amount] [prefix]` |
+| `/give` | `/g` | `tshock.item.give` | Gives an item to another player. | `/give <name or id> <player> [amount] [prefix]` |
+
+---
+
+## NPC Commands
+
+Commands for managing NPC spawning and behavior.
+
+| Command | Aliases | Permission | Description | Usage |
+|---------|---------|------------|-------------|-------|
+| `/butcher` | — | `tshock.npc.butcher` | Kills all hostile NPCs, or NPCs of a specific type. | `/butcher [npcname]` |
+| `/renamenpc` | — | `tshock.npc.rename` | Renames a town NPC. | `/renamenpc <npcid> <newname>` |
+| `/maxspawns` | — | `tshock.npc.maxspawns` | Sets the maximum number of NPCs per spawn wave. | `/maxspawns <number>` |
+| `/spawnboss` | `/sb` | `tshock.npc.spawnboss` | Spawns a boss at your location. In-game only. | `/spawnboss <bossname> [amount]` |
+| `/spawnmob` | `/sm` | `tshock.npc.spawnmob` | Spawns mobs at your location. In-game only. | `/spawnmob <mobname> [amount]` |
+| `/spawnrate` | — | `tshock.npc.spawnrate` | Sets the NPC spawn rate (lower = more frequent). | `/spawnrate <rate>` |
+| `/clearangler` | — | `tshock.npc.clearanglerquests` | Resets completed angler quest tracking for the day. | `/clearangler` |
+
+---
+
+## Teleportation Commands
+
+Commands for teleporting players around the world.
+
+| Command | Aliases | Permission | Description | Usage |
+|---------|---------|------------|-------------|-------|
+| `/home` | — | `tshock.tp.home` | Teleports you to your personal spawn point. In-game only. | `/home` |
+| `/spawn` | — | `tshock.tp.spawn` | Teleports you to the world spawn point. In-game only. | `/spawn` |
+| `/tp` | — | `tshock.tp.self` | Teleports you to another player. In-game only. | `/tp <player>` |
+| `/tphere` | — | `tshock.tp.others` | Teleports another player to you. In-game only. | `/tphere <player>` |
+| `/tpnpc` | — | `tshock.tp.npc` | Teleports you to an NPC. In-game only. | `/tpnpc <npcname>` |
+| `/tppos` | — | `tshock.tp.pos` | Teleports you to specific tile coordinates. In-game only. | `/tppos <x> <y>` |
+| `/pos` | — | `tshock.tp.getpos` | Returns your current tile coordinates, or another player's. In-game only. | `/pos [player]` |
+| `/tpallow` | — | `tshock.tp.block` | Toggles whether other players can teleport you. In-game only. | `/tpallow` |
+
+---
+
+## World Commands
+
+Commands for modifying world state, time, and environment.
+
+| Command | Aliases | Permission | Description | Usage |
+|---------|---------|------------|-------------|-------|
+| `/worldmode` | `/gamemode` | `tshock.world.toggleexpert` | Changes the world difficulty mode. | `/worldmode <normal\|expert\|master\|journey>` |
+| `/antibuild` | — | `tshock.admin.antibuild` | Toggles global build protection. | `/antibuild` |
+| `/grow` | — | `tshock.world.grow` | Grows plants at your location. In-game only. | `/grow [planttype]` |
+| `/forcehalloween` | — | `tshock.world.sethalloween` | Toggles permanent Halloween mode. | `/forcehalloween` |
+| `/forcexmas` | — | `tshock.world.setxmas` | Toggles permanent Christmas mode. | `/forcexmas` |
+| `/worldevent` | — | `tshock.world.events` | Starts or stops world events (bloodmoon, invasion, meteor, etc.). | `/worldevent <eventname> [start\|stop]` |
+| `/hardmode` | — | `tshock.world.hardmode` | Toggles hardmode on or off. | `/hardmode` |
+| `/evil` | — | `tshock.world.switchevil` | Switches the world's evil type between corruption and crimson. | `/evil` |
+| `/protectspawn` | — | `tshock.world.editspawn` | Toggles spawn area protection. | `/protectspawn` |
+| `/save` | — | `tshock.world.save` | Saves the world file immediately. | `/save` |
+| `/setspawn` | — | `tshock.world.setspawn` | Sets the world spawn to your current location. In-game only. | `/setspawn` |
+| `/setdungeon` | — | `tshock.world.setdungeon` | Sets the dungeon entrance to your current location. In-game only. | `/setdungeon` |
+| `/settle` | — | `tshock.world.settleliquids` | Forces all liquid physics to update immediately. | `/settle` |
+| `/time` | — | `tshock.world.time.set` | Sets the world time. | `/time <day\|night\|dusk\|noon\|midnight\|hh:mm>` |
+| `/wind` | — | `tshock.world.wind` | Changes the current wind speed. | `/wind <speed>` |
+| `/worldinfo` | — | `tshock.world.info` | Shows information about the current world. | `/worldinfo` |
+
+---
+
+## Buff & Heal Commands
+
+Commands for applying buffs and restoring player health.
+
+| Command | Aliases | Permission | Description | Usage |
+|---------|---------|------------|-------------|-------|
+| `/buff` | — | `tshock.buff.self` | Gives yourself a buff or debuff. Use `-1` for 415 days. In-game only. | `/buff <buffid or name> [seconds]` |
+| `/gbuff` | `/buffplayer` | `tshock.buff.others` | Gives another player a buff or debuff. Use `-1` for 415 days. | `/gbuff <player> <buffid or name> [seconds]` |
+| `/heal` | — | `tshock.heal` | Fully heals a player's HP and MP. | `/heal [player]` |
+| `/godmode` | `/god` | `tshock.godmode` | Toggles godmode (regenerate health as damage is taken). | `/godmode [player]` |
+
+---
+
+## Miscellaneous Commands
+
+| Command | Aliases | Permission | Description | Usage |
+|---------|---------|------------|-------------|-------|
+| `/clear` | — | `tshock.clear` | Clears dropped items or projectiles from the world. | `/clear <item\|projectile\|npc> [radius]` |
+| `/kill` | `/slay` | `tshock.kill` | Instantly kills another player. | `/kill <player>` |
+| `/me` | — | `tshock.thirdperson` | Sends a third-person action message to all players. | `/me <action>` |
+| `/party` | `/p` | `tshock.partychat` | Sends a message to your team only. In-game only. | `/party <message>` |
+| `/reply` | `/r` | `tshock.whisper` | Replies to the last private message you received. | `/reply <message>` |
+| `/rest` | — | `tshock.rest.manage` | Manages the REST API. | `/rest <command>` |
+| `/slap` | — | `tshock.slap` | Slaps a player, dealing damage. | `/slap <player> [damage]` |
+| `/serverinfo` | — | `tshock.info` | Shows server version, world, and uptime information. | `/serverinfo` |
+| `/warp` | — | `tshock.warp` | Teleports you to a named warp point, or manages warps. | `/warp <name>` or `/warp <add\|del\|list>` |
+| `/whisper` | `/w`, `/tell`, `/pm`, `/dm` | `tshock.whisper` | Sends a private message to a player. | `/whisper <player> <message>` |
+| `/wallow` | `/wa` | `tshock.whisper` | Toggles ignoring or receiving whispers from players. In-game only. | `/wallow` |
+| `/sync` | — | `tshock.synclocalarea` | Resyncs the client with the server's actual world state. | `/sync` |
+| `/respawn` | — | `tshock.respawn` | Respawns yourself or another player. | `/respawn [player]` |
+| `/annoy` | — | `tshock.annoy` | Annoys a player for a set duration. | `/annoy <player> <seconds>` |
+| `/rocket` | — | `tshock.annoy` | Launches a player upward (requires SSC). | `/rocket <player>` |
+| `/firework` | — | `tshock.annoy` | Spawns fireworks at a player. | `/firework <player>` |
+
+---
+
+## Utility Commands (No Permission Required)
+
+These commands are available to all connected players by default.
+
+| Command | Aliases | Description | Usage |
+|---------|---------|-------------|-------|
+| `/aliases` | — | Shows the aliases for a given command. | `/aliases <command>` |
+| `/help` | — | Lists available commands or shows help for a specific one. | `/help [command] [page]` |
+| `/motd` | — | Shows the message of the day. | `/motd` |
+| `/playing` | `/online`, `/who` | Lists currently connected players. | `/playing` |
+| `/rules` | — | Shows the server's rules. | `/rules` |
+| `/death` | — | Shows your current death count. In-game only. | `/death` |
+| `/pvpdeath` | — | Shows your PvP death count. In-game only. | `/pvpdeath` |
+| `/alldeath` | — | Shows death counts for all online players. | `/alldeath` |
+| `/allpvpdeath` | — | Shows PvP death counts for all online players. | `/allpvpdeath` |
+| `/bossdamage` | — | Shows recent boss kill damage contributions. | `/bossdamage` |

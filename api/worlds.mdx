@@ -1,0 +1,217 @@
+---
+title: "REST API endpoints for world management"
+description: "TShock REST API endpoints for reading world status, saving the world, toggling autosave, butchering NPCs, and triggering world events remotely."
+---
+
+The world endpoints expose controls over the active Terraria world running on your TShock server. You can read basic world state, persist it to disk, toggle autosave, remove all hostile NPCs, and trigger world events like a blood moon or meteor drop. Most write operations require the `tshock.rest.cfg` or `tshock.rest.causeevents` permission; read operations on world state require only a valid token.
+
+## GET /world/read
+
+Return general information about the currently active world. No special permissions are required beyond a valid token.
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl "http://localhost:7878/world/read?token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "name": "My World",
+  "size": "4200*1200",
+  "time": 27000.5,
+  "daytime": true,
+  "bloodmoon": false,
+  "invasionsize": 0
+}
+```
+
+<ResponseField name="name" type="string">
+  The world name (or server name if `UseServerName` is enabled in config).
+</ResponseField>
+
+<ResponseField name="size" type="string">
+  World dimensions as `width*height` in tiles.
+</ResponseField>
+
+<ResponseField name="time" type="number">
+  Current in-game time value.
+</ResponseField>
+
+<ResponseField name="daytime" type="boolean">
+  Whether it is currently daytime in the world.
+</ResponseField>
+
+<ResponseField name="bloodmoon" type="boolean">
+  Whether a blood moon is currently active.
+</ResponseField>
+
+<ResponseField name="invasionsize" type="integer">
+  The current invasion size (0 if no invasion is active).
+</ResponseField>
+
+---
+
+## POST /v2/world/save
+
+Trigger an immediate world save to disk.
+
+**Required permission:** `tshock.rest.cfg`
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl "http://localhost:7878/v2/world/save?token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "response": "World saved"
+}
+```
+
+---
+
+## GET /v3/world/autosave
+
+Read or set the autosave state. When called without the `state` parameter, returns the current autosave status. When `state` is provided, updates the setting.
+
+**Required permission:** `tshock.rest.cfg`
+
+<ParamField query="state" type="boolean">
+  Set to `true` to enable autosave, `false` to disable. Omit to read the current state.
+</ParamField>
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl (read state)
+curl "http://localhost:7878/v3/world/autosave?token=your-token-here"
+```
+
+```bash curl (enable autosave)
+curl "http://localhost:7878/v3/world/autosave?state=true&token=your-token-here"
+```
+
+```bash curl (disable autosave)
+curl "http://localhost:7878/v3/world/autosave?state=false&token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "response": "AutoSave has been enabled"
+}
+```
+
+<Note>
+  This endpoint modifies the in-memory configuration only. The change does not persist across server restarts unless you also save your `config.json`.
+</Note>
+
+---
+
+## POST /v2/world/butcher
+
+Kill all active NPCs in the world. By default, friendly NPCs (town NPCs) are spared.
+
+**Required permission:** `tshock.rest.butcher`
+
+<ParamField query="killfriendly" type="boolean">
+  Set to `true` to also kill friendly/town NPCs. Defaults to `false`.
+</ParamField>
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl (hostile only)
+curl "http://localhost:7878/v2/world/butcher?token=your-token-here"
+```
+
+```bash curl (all NPCs)
+curl "http://localhost:7878/v2/world/butcher?killfriendly=true&token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "response": "47 NPCs have been killed."
+}
+```
+
+<Warning>
+  Setting `killfriendly=true` will kill town NPCs like the Guide, Merchant, and Nurse. They will respawn over time, but any in-progress NPC dialogue will be interrupted.
+</Warning>
+
+---
+
+## GET /v3/world/bloodmoon
+
+Read or toggle the blood moon status. Without a `state` parameter, returns the current blood moon state. With `state=true` or `state=false`, enables or disables the blood moon immediately.
+
+**Required permission:** `tshock.rest.causeevents`
+
+<ParamField query="state" type="boolean">
+  Set to `true` to start a blood moon, `false` to end it. Omit to read the current state.
+</ParamField>
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl (read state)
+curl "http://localhost:7878/v3/world/bloodmoon?token=your-token-here"
+```
+
+```bash curl (start blood moon)
+curl "http://localhost:7878/v3/world/bloodmoon?state=true&token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "response": "Blood Moon has been enabled"
+}
+```
+
+---
+
+## POST /world/meteor
+
+Drop a meteor somewhere on the world map.
+
+**Required permission:** `tshock.rest.causeevents`
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl "http://localhost:7878/world/meteor?token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "response": "Meteor has been spawned"
+}
+```

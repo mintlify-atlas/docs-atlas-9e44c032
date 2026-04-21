@@ -1,0 +1,138 @@
+---
+title: 'Install and manage TShock plugins via NuGet'
+description: 'Manage TShock plugins using the built-in NuGet package manager for automatic downloads, dependency resolution, and version-pinned installations.'
+---
+
+TShock supports two ways to install plugins: dropping DLL files directly into the `ServerPlugins/` folder, or using the built-in NuGet-based package manager. The NuGet workflow resolves dependencies automatically and records your plugin versions in a `packages.json` manifest, making it easier to reproduce your server setup and update plugins consistently.
+
+## Manual installation
+
+The simplest way to install a plugin is to place its `.dll` file inside the `ServerPlugins/` directory in your TShock installation. TShock loads every assembly in that folder at startup.
+
+```text
+TShock/
+├── ServerPlugins/
+│   ├── MyPlugin.dll
+│   └── AnotherPlugin.dll
+├── TShock.Server
+└── ...
+```
+
+<Note>
+Restart the server after adding or removing files from `ServerPlugins/`. Plugins are not hot-reloaded at runtime.
+</Note>
+
+## NuGet-based installation
+
+The `plugins` subcommand of `TShock.Server` provides an interactive, NuGet-backed installer. It reads a `packages.json` manifest, resolves the full dependency graph, shows you what will be downloaded, and installs everything into `ServerPlugins/`.
+
+### Step 1: Create a packages.json file
+
+Create `packages.json` in your TShock directory. The format is a single object with a `packages` key containing a map of NuGet package IDs to their version strings:
+
+```json
+{
+    "packages": {
+        "Commandy.20.10.22.Test": "0.0.1"
+    }
+}
+```
+
+Each key is the NuGet package ID of the plugin, and each value is the exact version to install.
+
+### Step 2: Run the sync command
+
+<Steps>
+  <Step title="Open a terminal in your TShock directory">
+    Navigate to the folder containing `TShock.Server` (or `TShock.Server.exe` on Windows).
+  </Step>
+  <Step title="Run the plugins sync command">
+    <CodeGroup>
+
+    ```bash Linux
+    ./TShock.Server plugins sync
+    ```
+
+    ```bash Windows
+    TShock.Server.exe plugins sync
+    ```
+
+    </CodeGroup>
+
+    The tool will display the plugins it found in `packages.json` and ask whether to connect to the internet to resolve dependencies.
+  </Step>
+  <Step title="Review and confirm the download plan">
+    After resolving the dependency graph, the tool lists all packages to be installed — both the ones you requested and any indirect dependencies. It also shows the NuGet source each package comes from.
+
+    Press `Y` to download and install, `N` to cancel, or `E` to see a full dependency tree before deciding.
+  </Step>
+  <Step title="Start the server">
+    Once installation completes, start TShock normally. The installed plugins will be loaded from `ServerPlugins/`.
+
+    <CodeGroup>
+
+    ```bash Linux
+    ./TShock.Server -world /path/to/world.wld -port 7777 -maxplayers 16
+    ```
+
+    ```bash Windows
+    TShock.Server.exe -world "C:\Terraria\worlds\MyWorld.wld" -port 7777 -maxplayers 16
+    ```
+
+    </CodeGroup>
+  </Step>
+</Steps>
+
+## CLI reference
+
+Running `TShock.Server plugins` without additional arguments shows built-in help:
+
+<CodeGroup>
+
+```bash Linux
+./TShock.Server plugins --help
+```
+
+```bash Windows
+TShock.Server.exe plugins --help
+```
+
+</CodeGroup>
+
+The available subcommand is:
+
+| Command | Description |
+|---|---|
+| `sync` | Download and install plugins as specified in `packages.json` |
+
+## Packages.json format
+
+```json
+{
+    "packages": {
+        "PackageId": "1.0.0",
+        "AnotherPackage": "2.3.1"
+    }
+}
+```
+
+- The file must be named `packages.json` and located in TShock's working directory.
+- Package IDs are case-sensitive NuGet package identifiers.
+- Versions must be valid NuGet version strings (e.g., `1.0.0`, `2.3.1-beta`).
+- JSON comments are allowed — the parser skips them.
+
+<Warning>
+The sync command downloads code from the internet and installs it into your server. Only install plugins from sources you trust. Review the package source displayed during installation before confirming.
+</Warning>
+
+## Finding plugins
+
+Community-built TShock plugins are commonly published on GitHub under the [`tshock-plugin` topic](https://github.com/topics/tshock-plugin). Check each plugin's repository for its NuGet package ID and compatible TShock version before adding it to `packages.json`.
+
+## Plugin compatibility
+
+TShock plugins target a specific TShock API version. A plugin built against an older API may not load on a newer TShock release. You can pass `-ignoreversion` at startup to skip API version checks, but this is not recommended for production servers as it can lead to crashes or undefined behavior.
+
+<Tip>
+When running multiple servers with the same plugin set, use the `-additionalplugins <path>` flag to point all servers at a shared `ServerPlugins/` directory instead of maintaining separate copies.
+</Tip>

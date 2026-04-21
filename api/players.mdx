@@ -1,0 +1,270 @@
+---
+title: "REST API endpoints for player management"
+description: "TShock REST API endpoints for listing, reading, kicking, killing, muting, and managing connected player sessions on your Terraria server."
+---
+
+The player endpoints let you inspect and interact with players currently connected to your TShock server. You can retrieve a simple name list, fetch detailed per-player data including inventory and position, and perform moderation actions such as kicking, killing, muting, or unmuting players — all without needing console access.
+
+## GET /lists/players
+
+List all player names currently on the server. No special permissions are required beyond a valid token.
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl "http://localhost:7878/lists/players?token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "players": "Alice, Bob, Charlie"
+}
+```
+
+---
+
+## GET /v2/players/list
+
+Fetch detailed information on all connected players. Supports optional key-value filters: include a query parameter whose name matches a player field (e.g. `group=superadmin`) to return only players where that field matches. No special permissions are required beyond a valid token.
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl "http://localhost:7878/v2/players/list?token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "players": [
+    {
+      "nickname": "Alice",
+      "username": "alice_account",
+      "group": "default",
+      "active": true,
+      "state": 10,
+      "team": 0
+    }
+  ]
+}
+```
+
+<Note>
+  If the token's group has the `tshock.rest.viewips` permission, each player object also includes an `ip` field.
+</Note>
+
+---
+
+## GET /v3/players/read
+
+Get detailed information for a specific connected player, including inventory, armor, dyes, and active buffs.
+
+**Required permission:** `tshock.rest.users.info`
+
+<ParamField query="player" type="string" required>
+  The player name or ID to look up.
+</ParamField>
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl "http://localhost:7878/v3/players/read?player=Alice&token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "nickname": "Alice",
+  "username": "alice_account",
+  "ip": "192.168.1.5",
+  "group": "default",
+  "registered": "2024-01-15T12:00:00",
+  "muted": false,
+  "position": "1024,256",
+  "inventory": "Iron Sword:1, Torch:99",
+  "armor": "1:0, 2:0",
+  "dyes": "Red Dye",
+  "buffs": "0, 0, 0"
+}
+```
+
+---
+
+## GET /v4/players/read
+
+Get detailed information for a specific connected player. Returns the same core fields as v3 but with structured item objects for inventory, equipment, dyes, piggy bank, safe, and forge slots.
+
+**Required permission:** `tshock.rest.users.info`
+
+<ParamField query="player" type="string" required>
+  The player name or ID to look up.
+</ParamField>
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl "http://localhost:7878/v4/players/read?player=Alice&token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "nickname": "Alice",
+  "username": "alice_account",
+  "ip": "192.168.1.5",
+  "group": "default",
+  "registered": "2024-01-15T12:00:00",
+  "muted": false,
+  "position": "1024,256",
+  "items": {
+    "inventory": [],
+    "equipment": [],
+    "dyes": [],
+    "piggy": [],
+    "safe": [],
+    "forge": []
+  },
+  "buffs": "0, 0, 0"
+}
+```
+
+---
+
+## POST /v2/players/kick
+
+Kick a player off the server with an optional reason message.
+
+**Required permission:** `tshock.rest.kick`
+
+<ParamField query="player" type="string" required>
+  The name of the player to kick.
+</ParamField>
+
+<ParamField query="reason" type="string">
+  The reason shown to the kicked player. Defaults to `"Kicked via web"` if omitted.
+</ParamField>
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl "http://localhost:7878/v2/players/kick?player=Alice&reason=AFK&token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "response": "Player Alice was kicked"
+}
+```
+
+---
+
+## POST /v2/players/kill
+
+Kill a player in-game by dealing lethal damage.
+
+**Required permission:** `tshock.rest.kill`
+
+<ParamField query="player" type="string" required>
+  The name of the player to kill.
+</ParamField>
+
+<ParamField query="from" type="string">
+  The name displayed as the killer in the death message. Defaults to `"Server Admin"` if omitted.
+</ParamField>
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl "http://localhost:7878/v2/players/kill?player=Alice&from=Admin&token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "response": "Player Alice was killed"
+}
+```
+
+---
+
+## POST /v2/players/mute
+
+Mute a player, preventing them from sending chat messages.
+
+**Required permission:** `tshock.rest.mute`
+
+<ParamField query="player" type="string" required>
+  The name of the player to mute.
+</ParamField>
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl "http://localhost:7878/v2/players/mute?player=Alice&token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "response": "Player Alice has been muted"
+}
+```
+
+---
+
+## POST /v2/players/unmute
+
+Unmute a previously muted player, restoring their ability to chat.
+
+**Required permission:** `tshock.rest.mute`
+
+<ParamField query="player" type="string" required>
+  The name of the player to unmute.
+</ParamField>
+
+<ParamField query="token" type="string" required>
+  The REST authentication token.
+</ParamField>
+
+<CodeGroup>
+```bash curl
+curl "http://localhost:7878/v2/players/unmute?player=Alice&token=your-token-here"
+```
+</CodeGroup>
+
+```json
+{
+  "status": "200",
+  "response": "Player Alice has been unmuted"
+}
+```

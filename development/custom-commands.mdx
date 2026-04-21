@@ -1,0 +1,173 @@
+---
+title: "Register custom commands in TShock plugins"
+description: "Add custom in-game commands to TShock using CommandDelegate, CommandArgs, and Commands.ChatCommands with permission strings and console support."
+---
+
+TShock's command system is built around three types: the `CommandDelegate` delegate, the `CommandArgs` class that carries context into your handler, and the `Command` class that ties a delegate to one or more command names and an optional permission string. All registered commands live in `Commands.ChatCommands`, a mutable `List<Command>` you add to and remove from in your plugin.
+
+## Core types
+
+### `CommandDelegate`
+
+```csharp
+public delegate void CommandDelegate(CommandArgs args);
+```
+
+Any method that matches this signature can serve as a command handler.
+
+### `CommandArgs`
+
+`CommandArgs` (in `TShockAPI`) is passed to every command handler and exposes:
+
+| Property | Type | Description |
+|---|---|---|
+| `Message` | `string` | The full raw command string the player sent. |
+| `Player` | `TSPlayer` | The player who issued the command. Use `TSPlayer.Server` for console. |
+| `Parameters` | `List<string>` | Arguments after the command name. `/kick "jerk face"` yields one parameter. |
+| `Silent` | `bool` | `true` when the command was invoked with the silent specifier (`.`). |
+| `TPlayer` | `Terraria.Player` | Shorthand for `Player.TPlayer` — the underlying Terraria player object. |
+
+### `Command`
+
+The `Command` class (in `TShockAPI`) wraps your delegate with metadata:
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `AllowServer` | `bool` | `true` | Whether the server console can use this command. |
+| `DoLog` | `bool` | `true` | Whether command invocations are written to the log. |
+| `HelpText` | `string` | `"No help available."` | Short description shown by `/help`. |
+| `HelpDesc` | `string[]` | `null` | Extended multi-line description for `/help <command>`. |
+| `Names` | `List<string>` | — | All aliases for the command. `Name` returns `Names[0]`. |
+| `Permissions` | `List<string>` | — | Any one of these permissions allows the player to run the command. Empty list means no restriction. |
+
+## Registering a command
+
+Add your command in `Initialize()` using `Commands.ChatCommands.Add()`:
+
+```csharp MyPlugin.cs
+public override void Initialize()
+{
+    Commands.ChatCommands.Add(new Command("myplugin.command", MyCommand, "mycommand")
+    {
+        HelpText = "Does something useful.",
+        AllowServer = true
+    });
+}
+
+private void MyCommand(CommandArgs args)
+{
+    if (args.Parameters.Count == 0)
+    {
+        args.Player.SendErrorMessage("Usage: /mycommand <arg>");
+        return;
+    }
+    args.Player.SendSuccessMessage($"You said: {args.Parameters[0]}");
+}
+```
+
+The first argument to `Command` is the permission string. Players (and groups) that have this permission can run the command. Pass `null` or use the no-permission overload to allow anyone to run the command:
+
+```csharp
+// No permission required — anyone can run this
+Commands.ChatCommands.Add(new Command(MyPublicCommand, "publiccmd")
+{
+    HelpText = "Anyone can use this."
+});
+```
+
+## Multiple names (aliases)
+
+Pass additional strings to the `Command` constructor to register aliases:
+
+```csharp
+Commands.ChatCommands.Add(new Command("myplugin.info", InfoCommand, "myinfo", "mi")
+{
+    HelpText = "Shows plugin info."
+});
+```
+
+Players can invoke this as `/myinfo` or `/mi`.
+
+## Sending messages to players
+
+`TSPlayer` (in `TShockAPI`) provides four colored message methods:
+
+```csharp
+args.Player.SendMessage("Custom color message.", 255, 165, 0);   // orange
+args.Player.SendInfoMessage("Informational message.");            // yellow
+args.Player.SendSuccessMessage("Operation succeeded.");           // green
+args.Player.SendErrorMessage("Something went wrong.");            // red
+```
+
+All four methods accept a format string overload — `SendErrorMessage(string format, params object[] args)` — so you do not need to call `string.Format` manually.
+
+## Full example with parameter parsing
+
+<CodeGroup>
+```csharp Register
+public override void Initialize()
+{
+    Commands.ChatCommands.Add(new Command("myplugin.greet", GreetCommand, "greet")
+    {
+        HelpText = "Greets a player by name.",
+        HelpDesc = new[]
+        {
+            "Usage: /greet <player>",
+            "Sends a greeting message to the specified player."
+        },
+        AllowServer = true
+    });
+}
+```
+
+```csharp Handler
+private void GreetCommand(CommandArgs args)
+{
+    if (args.Parameters.Count < 1)
+    {
+        args.Player.SendErrorMessage("Usage: /greet <player>");
+        return;
+    }
+
+    var found = TSPlayer.FindByNameOrID(args.Parameters[0]);
+    if (found.Count == 0)
+    {
+        args.Player.SendErrorMessage($"No player found matching '{args.Parameters[0]}'.");
+        return;
+    }
+    if (found.Count > 1)
+    {
+        args.Player.SendErrorMessage("Multiple players matched. Please be more specific.");
+        return;
+    }
+
+    TSPlayer target = found[0];
+    target.SendInfoMessage($"Hello from {args.Player.Name}!");
+    args.Player.SendSuccessMessage($"Greeted {target.Name}.");
+}
+```
+</CodeGroup>
+
+## Removing commands
+
+To remove commands when your plugin disposes, use `RemoveAll` to match by name or delegate:
+
+```csharp
+protected override void Dispose(bool disposing)
+{
+    if (disposing)
+    {
+        Commands.ChatCommands.RemoveAll(c => c.CommandDelegate == MyCommand);
+        Commands.ChatCommands.RemoveAll(c => c.CommandDelegate == GreetCommand);
+    }
+    base.Dispose(disposing);
+}
+```
+
+<Tip>
+Removing by delegate reference is safer than removing by name, since another plugin could register a command with the same name.
+</Tip>
+
+## Console access
+
+Commands with `AllowServer = true` (the default) can be run from the server console. `args.Player` will be `TSPlayer.Server` in that case. Check `args.Player == TSPlayer.Server` if your command behaves differently depending on who calls it.

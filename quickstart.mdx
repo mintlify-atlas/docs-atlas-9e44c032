@@ -1,80 +1,165 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: "Get started with TShock"
+description: "Learn how to set up a TShock server, create an admin account, and configure basic settings in under 10 minutes."
 ---
 
-## Get started in three steps
+This guide walks you through first-time server setup from the moment TShock starts to having a fully configured server with an admin account. By the end you will have a running server that players can join on port 7777, and you will know where the configuration files live.
 
-Get your documentation site running locally and make your first customization.
+Before starting, make sure you have [installed TShock](/installation) and that the server binary runs without errors.
 
-### Step 1: Set up your local environment
+## First-time setup
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+<Steps>
+  <Step title="Start the server">
+    Run the TShock server binary. On Windows:
 
-### Step 2: Deploy your changes
+    ```bat
+    TShock.Server.exe
+    ```
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    On Linux or macOS:
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+    ```bash
+    ./TShock.Server
+    ```
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+    Answer the interactive startup prompts to choose or create a world. TShock will boot and create a `tshock/` folder next to the binary. Watch the console output — you will see a **setup code** appear shortly after the server finishes loading.
+  </Step>
+  <Step title="Note the setup code">
+    Look for a line in the server console that looks like this:
 
-### Step 3: Go live
+    ```
+    To setup the server, join the game and type /setup 12345678
+    ```
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+    The number is a one-time setup code that grants temporary superadmin access to the first person who uses it. Keep the console window visible — you will need this code in the next step.
+
+    <Note>
+      The setup code is regenerated every time the server starts and is only valid until you disable the setup system with `/setup`.
+    </Note>
+  </Step>
+  <Step title="Connect to the server">
+    Open Terraria, navigate to **Multiplayer** → **Join via IP**, and enter:
+
+    - **Host**: `localhost` (if the server is on the same machine) or the server's IP address
+    - **Port**: `7777`
+  </Step>
+  <Step title="Activate the setup code in-game">
+    In the in-game chat, type the setup command using the code from the console:
+
+    ```
+    /setup 12345678
+    ```
+
+    Replace `12345678` with the actual code shown in your console. You will receive a message confirming temporary superadmin access. This does not persist — it only lasts for the current session until you create a permanent account.
+
+    <Tip>
+      All TShock commands can be prefixed with `/` (visible to others) or `.` (silent — only you see the output).
+    </Tip>
+  </Step>
+  <Step title="Create your owner account">
+    Create a permanent account with the `owner` group:
+
+    ```
+    /user add myusername mysecurepassword owner
+    ```
+
+    Replace `myusername` and `mysecurepassword` with your chosen credentials. The `owner` group has full server permissions by default.
+
+    <Warning>
+      Choose a strong password. TShock uses BCrypt to store passwords, but a weak password is still a weak password.
+    </Warning>
+  </Step>
+  <Step title="Log in to your new account">
+    Log in to the account you just created:
+
+    ```
+    /login myusername mysecurepassword
+    ```
+
+    You should see a login success message. From this point on, log in with this command every time you join the server.
+  </Step>
+  <Step title="Disable the setup system">
+    Turn off the setup code so no one else can use it:
+
+    ```
+    /setup
+    ```
+
+    Running `/setup` without a code argument disables the setup system. The server will no longer display a setup code in the console after restarts.
+  </Step>
+</Steps>
+
+## What TShock created
+
+After first startup the `tshock/` folder contains:
+
+```
+tshock/
+|-- config.json        # Main server configuration
+|-- sscconfig.json     # Server-side character configuration
+|-- tshock.sqlite      # Database: accounts, bans, regions, warps
+|-- logs/              # Timestamped server log files
+```
+
+<Note>
+**Do not lose `tshock.sqlite`.** This file stores all player accounts, bans, groups, regions, and warps. If you delete it, you will need to run through the setup process again and all player data will be lost. Back it up regularly.
+</Note>
+
+## Connecting players
+
+Players connect to your server using the game's **Multiplayer** → **Join via IP** option:
+
+- **Port**: `7777` (default; configurable in `config.json` under `ServerPort`)
+- **Host**: your server's public IP address or hostname
+
+If you are hosting from home, make sure port `7777` is port-forwarded on your router and open in any local firewall.
+
+## Common first commands
+
+Once you are logged in as owner, these commands help with initial configuration:
+
+<CodeGroup>
+
+```text Broadcast a server message
+/broadcast Welcome to the server!
+```
+
+```text Kick a player
+/kick PlayerName Reason for kick
+```
+
+```text Ban a player
+/ban add PlayerName Reason for ban
+```
+
+```text Give yourself an item
+/give "Zenith" 1
+```
+
+```text List online players
+/who
+```
+
+```text Save the world manually
+/save
+```
+
+</CodeGroup>
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
-
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Configuration" icon="sliders" href="/administration/configuration">
+    Browse every setting in `config.json` — ports, anti-cheat thresholds, chat format, database, and more.
+  </Card>
+  <Card title="Groups and permissions" icon="users" href="/administration/groups-and-permissions">
+    Create custom groups, assign permissions, and control what players can do.
+  </Card>
+  <Card title="Server-side characters" icon="person" href="/administration/server-side-characters">
+    Enable SSC to store player inventories on the server and prevent item duplication.
+  </Card>
+  <Card title="Plugin installation" icon="puzzle-piece" href="/deployment/plugins">
+    Extend TShock by dropping plugin DLLs into the `ServerPlugins/` folder.
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

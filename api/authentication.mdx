@@ -1,0 +1,135 @@
+---
+title: "Authenticate with the TShock REST API"
+description: "Obtain and use REST API tokens in TShock, configured in config.json or created dynamically, and passed as a query parameter on every request."
+---
+
+Every call to the TShock REST API must include a valid `token` query parameter. Without a token, the server responds with a `401 Not Authorized` error. Tokens are tied to a TShock user account and group, which determines what endpoints that token can access. You can supply tokens in two ways: statically via `config.json`, or dynamically by calling the token creation endpoint.
+
+## Static tokens via config.json
+
+The simplest approach for server automation and integrations is to define one or more application tokens directly in your TShock `config.json` file. These tokens are loaded at startup and persist across server restarts.
+
+Add an `ApplicationRestTokens` object to your `config.json`:
+
+```json
+{
+  "ApplicationRestTokens": {
+    "your-token-here": {
+      "Username": "admin",
+      "UserGroupName": "superadmin"
+    }
+  }
+}
+```
+
+- **Key** — the token string you will pass in API requests. Use a long, random value.
+- **Username** — the TShock account name to associate with this token.
+- **UserGroupName** — the group whose permissions govern what this token can do.
+
+<Warning>
+  Store token values securely. Anyone with a valid token can perform all actions permitted by its associated group.
+</Warning>
+
+## Dynamic tokens via the API
+
+You can also create session tokens by authenticating with a TShock username and password. These tokens exist only in memory and are lost when the server restarts.
+
+```bash curl
+curl "http://localhost:7878/v2/token/create?username=admin&password=yourpassword"
+```
+
+A successful response returns the token string:
+
+```json
+{
+  "status": "200",
+  "response": "Successful login",
+  "token": "A3F2...8C1D"
+}
+```
+
+To invalidate a session token when you are done:
+
+```bash curl
+curl "http://localhost:7878/token/destroy/A3F2...8C1D?token=A3F2...8C1D"
+```
+
+To destroy all active session tokens at once (requires `tshock.rest.manage` permission):
+
+```bash curl
+curl "http://localhost:7878/v3/token/destroy/all?token=your-token-here"
+```
+
+<Note>
+  TShock rate-limits token creation requests per IP address. Repeated failed attempts will be blocked. The threshold is configured by `RESTMaximumRequestsPerInterval` in `config.json`.
+</Note>
+
+## Passing the token in requests
+
+Append `?token=<value>` to every API request as a query parameter:
+
+```text
+GET http://localhost:7878/v2/players/list?token=your-token-here
+```
+
+When combining multiple query parameters, the token can appear in any position:
+
+```text
+GET http://localhost:7878/v2/players/kick?player=Steve&reason=AFK&token=your-token-here
+```
+
+## Permission requirements
+
+The group assigned to a token must hold the appropriate permission node for each endpoint. For example:
+
+| Action | Required permission |
+|---|---|
+| View bans | `tshock.rest.bans.view` |
+| Manage bans | `tshock.rest.bans.manage` |
+| View groups | `tshock.rest.groups.view` |
+| Manage groups | `tshock.rest.groups.manage` |
+| View users | `tshock.rest.users.view` |
+| Manage users | `tshock.rest.users.manage` |
+| Kick players | `tshock.rest.kick` |
+| Kill players | `tshock.rest.kill` |
+| Mute players | `tshock.rest.mute` |
+| Execute commands | `tshock.rest.command` |
+| Broadcast messages | `tshock.rest.broadcast` |
+| Save world / reload config | `tshock.rest.cfg` |
+| Shut down server | `tshock.rest.maintenance` |
+| Cause world events | `tshock.rest.causeevents` |
+| Butcher NPCs | `tshock.rest.butcher` |
+
+The `superadmin` group has all permissions by default. To create a limited-access token, assign it to a group with only the permissions it needs.
+
+## Auth failure responses
+
+| HTTP status | Meaning |
+|---|---|
+| `401` | No token was provided |
+| `403` | Token is missing, invalid, or lacks permission for the endpoint |
+
+A `403` response body looks like:
+
+```json
+{
+  "status": "403",
+  "error": "Not authorized. User \"viewer\" has no access to use the specified API endpoint."
+}
+```
+
+## Testing a token
+
+Use the token test endpoint to verify a token is valid without performing any state-changing action:
+
+```bash curl
+curl "http://localhost:7878/tokentest?token=your-token-here"
+```
+
+```json
+{
+  "status": "200",
+  "response": "Token is valid and was passed through correctly.",
+  "associateduser": "admin"
+}
+```

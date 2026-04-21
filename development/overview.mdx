@@ -1,0 +1,80 @@
+---
+title: "Build TShock plugins: framework overview"
+description: "TShock plugins are TSAPI plugins with access to hooks, commands, REST endpoints, and the full Terraria namespace through TerrariaServerAPI."
+---
+
+TShock is itself a plugin running on [TerrariaServerAPI](https://github.com/Pryaxis/TerrariaAPI-Server) (TSAPI). Any plugin you write follows the same pattern: you extend `TerrariaPlugin`, declare an `[ApiVersion]` attribute, and register your hooks and commands in `Initialize()`. Because TShock sits on top of TSAPI, your plugin gains access to everything TShock exposes — player management, hooks, commands, the REST API — alongside the full `Terraria` namespace for direct game access.
+
+## Plugin class structure
+
+Every TShock plugin starts with a class that extends `TerrariaPlugin` and carries the `[ApiVersion(2, 1)]` attribute. This attribute tells TSAPI which API version your plugin targets and is required for the plugin to load.
+
+```csharp MyPlugin.cs
+using Terraria;
+using TerrariaApi.Server;
+
+[ApiVersion(2, 1)]
+public class MyPlugin : TerrariaPlugin
+{
+    public override string Name => "MyPlugin";
+    public override Version Version => new Version(1, 0, 0);
+    public override string Author => "You";
+    public override string Description => "My TShock plugin";
+
+    public MyPlugin(Main game) : base(game) { }
+
+    public override void Initialize()
+    {
+        // Register hooks and commands here
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            // Unsubscribe from hooks here
+        }
+        base.Dispose(disposing);
+    }
+}
+```
+
+## Direct Terraria namespace access
+
+One of the most powerful aspects of building on TSAPI is that all public fields in the `Terraria` namespace are directly accessible. You can read and modify game state, send data packets, access `Main`, and call any public Terraria method — no reflection or wrappers required. TShock itself does this extensively for world manipulation and data handling.
+
+<Note>
+Pryaxis provides decompiled [Terraria server sources](https://github.com/Pryaxis/Sources) to contributors. If you have submitted a pull request, reach out on Discord to gain access. Alternatively, tools like ILSpy can decompile the server binary locally.
+</Note>
+
+## NuGet packages
+
+Add both packages to your plugin project:
+
+```xml MyPlugin.csproj
+<PackageReference Include="TShock" Version="*" />
+<PackageReference Include="TSAPI" Version="*" />
+```
+
+`TSAPI` provides `TerrariaPlugin`, `ApiVersionAttribute`, and the server hook infrastructure. `TShock` provides `TSPlayer`, `Commands`, `PlayerHooks`, and all other TShock-specific APIs.
+
+## Examples and community plugins
+
+The [TShockResources](https://github.com/TShockResources) GitHub organization hosts a collection of open-source plugins you can read and build on. Since TShock itself is open source and a plugin, the TShock source code is also a comprehensive reference.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Hooks and events" icon="bolt" href="/development/hooks-and-events">
+    Subscribe to player, account, region, and server events.
+  </Card>
+  <Card title="Custom commands" icon="terminal" href="/development/custom-commands">
+    Register in-game chat commands with permission gating.
+  </Card>
+  <Card title="REST API extensions" icon="plug" href="/development/rest-api-extensions">
+    Add custom HTTP endpoints to TShock's REST API.
+  </Card>
+  <Card title="Build from source" icon="code" href="/development/building-from-source">
+    Clone and compile TShock locally with .NET 9.
+  </Card>
+</CardGroup>
